@@ -1862,7 +1862,8 @@ body {
 }
 
 /* Sembunyikan Tombol Keranjang Kasir saat Berada di Halaman Admin */
-body.role-admin #btnToggleCartMobile {
+body.role-admin #btnToggleCartMobile,
+body:has(#adminView.active) #btnToggleCartMobile {
   display: none !important;
 }
 
