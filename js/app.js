@@ -988,7 +988,7 @@ function openEditProductModal(productId) {
   document.getElementById('formProductId').value = prod.id;
   document.getElementById('formProductName').value = prod.name;
   document.getElementById('formProductCategory').value = prod.category || 'Makanan';
-  document.getElementById('formProductPrice').value = prod.price;
+  document.getElementById('formProductPrice').value = prod.price ? Number(prod.price).toLocaleString('id-ID') : '';
   document.getElementById('formProductStock').value = prod.stock;
   document.getElementById('formProductImageUrl').value = prod.imageUrl || '';
 
@@ -1220,6 +1220,20 @@ function setupEventListeners() {
     calculateChange();
   });
 
+  // Input Harga Jual Produk Admin dengan Pemisah Ribuan (Titik) Otomatis
+  const formPriceEl = document.getElementById('formProductPrice');
+  if (formPriceEl) {
+    formPriceEl.addEventListener('input', (e) => {
+      const raw = e.target.value.replace(/[^0-9]/g, '');
+      if (raw) {
+        const num = parseInt(raw, 10);
+        e.target.value = num.toLocaleString('id-ID');
+      } else {
+        e.target.value = '';
+      }
+    });
+  }
+
   // Tombol Cepat Nominal Berformat Ribuan (Titik)
   document.querySelectorAll('.btn-quick-cash').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1340,7 +1354,8 @@ function setupEventListeners() {
     const id = document.getElementById('formProductId').value || ('prod_' + Date.now());
     const name = document.getElementById('formProductName').value.trim();
     const category = document.getElementById('formProductCategory').value;
-    const price = Number(document.getElementById('formProductPrice').value);
+    const rawPrice = document.getElementById('formProductPrice').value.replace(/[^0-9]/g, '');
+    const price = Number(rawPrice || 0);
     const stock = Number(document.getElementById('formProductStock').value);
     const imageUrl = document.getElementById('formProductImageUrl').value.trim();
 
