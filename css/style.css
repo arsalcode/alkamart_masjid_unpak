@@ -1844,3 +1844,19 @@ body {
     font-size: 12px;
   }
 }
+
+/* Sembunyikan Tulisan "ALKAMART" pada Perangkat Mobile (<= 768px) */
+@media (max-width: 768px) {
+  .brand-text,
+  .brand-name {
+    display: none !important;
+  }
+
+  .brand-logo {
+    gap: 0;
+  }
+
+  .top-nav {
+    padding: 0 12px;
+  }
+}
