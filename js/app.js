@@ -369,6 +369,58 @@ function showToast(message, type = 'success') {
   }, 2800);
 }
 
+// Custom Confirmation Dialog Modern (Pengganti confirm() browser)
+function showCustomConfirm({
+  title = "Konfirmasi Tindakan",
+  message = "Apakah Anda yakin ingin melanjutkan?",
+  confirmText = "Ya, Lanjutkan",
+  cancelText = "Batal",
+  type = "danger",
+  icon = "ri-delete-bin-line"
+} = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('customConfirmModal');
+    const titleEl = document.getElementById('confirmTitle');
+    const msgEl = document.getElementById('confirmMessage');
+    const okBtn = document.getElementById('btnOkConfirm');
+    const cancelBtn = document.getElementById('btnCancelConfirm');
+    const okTextEl = document.getElementById('confirmOkText');
+    const iconBox = document.getElementById('confirmIconBox');
+    const iconEl = document.getElementById('confirmIcon');
+
+    titleEl.textContent = title;
+    msgEl.innerHTML = message;
+    okTextEl.textContent = confirmText;
+    cancelBtn.textContent = cancelText;
+
+    iconBox.className = `confirm-icon-box ${type}`;
+    iconEl.className = icon;
+
+    if (type === 'danger') {
+      okBtn.className = 'btn btn-danger';
+    } else if (type === 'warning') {
+      okBtn.className = 'btn btn-warning';
+    } else {
+      okBtn.className = 'btn btn-primary';
+    }
+
+    modal.classList.add('active');
+
+    function cleanUp(result) {
+      modal.classList.remove('active');
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+
+    function onOk() { cleanUp(true); }
+    function onCancel() { cleanUp(false); }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
 // Inisialisasi Aplikasi Saat Halaman Selesai Dimuat
 document.addEventListener('DOMContentLoaded', () => {
   initRoleView();
@@ -592,22 +644,67 @@ function promptDirectQuantity(productId) {
   const prod = store.products.find(p => p.id === productId);
   if (!item || !prod) return;
 
-  const input = prompt(`Masukkan jumlah item untuk ${item.name} (Maksimal ${prod.stock}):`, item.quantity);
-  if (input !== null) {
-    const qty = parseInt(input);
+  const modal = document.getElementById('customQuantityModal');
+  const titleEl = document.getElementById('customQtyTitle');
+  const subEl = document.getElementById('customQtySub');
+  const inputEl = document.getElementById('inputCustomQty');
+  const stockEl = document.getElementById('customQtyStockInfo');
+  const btnPlus = document.getElementById('btnQtyPlus');
+  const btnMinus = document.getElementById('btnQtyMinus');
+  const btnApply = document.getElementById('btnApplyQtyModal');
+  const btnCancel = document.getElementById('btnCancelQtyModal');
+  const btnClose = document.getElementById('btnCloseQtyModal');
+
+  titleEl.textContent = item.name;
+  subEl.textContent = `Harga: ${formatRp(item.price)} / item`;
+  stockEl.textContent = `Stok tersedia: ${prod.stock} item`;
+  inputEl.value = item.quantity;
+  inputEl.max = prod.stock;
+
+  modal.classList.add('active');
+  inputEl.focus();
+  inputEl.select();
+
+  function step(delta) {
+    let val = parseInt(inputEl.value || 0, 10) + delta;
+    if (val < 0) val = 0;
+    if (val > prod.stock) val = prod.stock;
+    inputEl.value = val;
+  }
+
+  const onPlus = () => step(1);
+  const onMinus = () => step(-1);
+
+  btnPlus.onclick = onPlus;
+  btnMinus.onclick = onMinus;
+
+  function closeModal() {
+    modal.classList.remove('active');
+    btnApply.onclick = null;
+    btnCancel.onclick = null;
+    btnClose.onclick = null;
+  }
+
+  btnCancel.onclick = closeModal;
+  btnClose.onclick = closeModal;
+
+  btnApply.onclick = () => {
+    const qty = parseInt(inputEl.value, 10);
     if (!isNaN(qty) && qty > 0) {
       if (qty <= prod.stock) {
         item.quantity = qty;
         item.subtotal = item.quantity * item.price;
         renderCart();
+        closeModal();
       } else {
         showToast(`Stok hanya tersedia ${prod.stock} item!`, 'error');
       }
     } else if (qty === 0) {
       cart = cart.filter(i => i.productId !== productId);
       renderCart();
+      closeModal();
     }
-  }
+  };
 }
 
 function renderCart() {
@@ -782,11 +879,20 @@ window.viewReceiptById = function(saleId) {
 };
 
 // Hapus Riwayat Transaksi (Fitur Batal / Koreksi Admin)
-window.deleteSaleById = function(saleId) {
-  if (confirm(`Batalkan transaksi ${saleId}? Catatan: Stok barang tidak akan otomatis dikembalikan.`)) {
+window.deleteSaleById = async function(saleId) {
+  const confirmed = await showCustomConfirm({
+    title: "Batalkan Transaksi?",
+    message: `Batalkan riwayat transaksi <strong>${saleId}</strong>?<br><small style="color: var(--danger); display: inline-block; margin-top: 6px;">Catatan: Stok barang tidak akan otomatis dikembalikan.</small>`,
+    confirmText: "Ya, Batalkan",
+    cancelText: "Kembali",
+    type: "warning",
+    icon: "ri-error-warning-line"
+  });
+
+  if (confirmed) {
     store.deleteSale(saleId);
     renderReportsTab();
-    showToast("Transaksi berhasil dihapus dari riwayat!", "info");
+    showToast("Transaksi berhasil dibatalkan dari riwayat!", "info");
   }
 };
 
@@ -897,14 +1003,24 @@ function openEditProductModal(productId) {
   document.getElementById('productFormModal').classList.add('active');
 }
 
-function confirmDeleteProduct(productId) {
+async function confirmDeleteProduct(productId) {
   const prod = store.products.find(p => p.id === productId);
   if (!prod) return;
-  if (confirm(`Yakin ingin menghapus produk "${prod.name}" dari katalog?`)) {
+
+  const confirmed = await showCustomConfirm({
+    title: "Hapus Produk?",
+    message: `Yakin ingin menghapus produk <strong>"${prod.name}"</strong> dari katalog warung?<br><small class="text-muted" style="display:inline-block; margin-top: 6px;">Data barang akan dihapus dan disinkronkan ke Google Sheets.</small>`,
+    confirmText: "Ya, Hapus",
+    cancelText: "Batal",
+    type: "danger",
+    icon: "ri-delete-bin-line"
+  });
+
+  if (confirmed) {
     store.deleteProduct(productId);
     renderAdminProductsTable();
     renderCashierCatalog();
-    showToast("Produk berhasil dihapus!", "info");
+    showToast(`Produk "${prod.name}" berhasil dihapus!`, "success");
   }
 }
 
@@ -1074,10 +1190,20 @@ function setupEventListeners() {
   });
 
   // Clear Cart
-  document.getElementById('btnClearCart').addEventListener('click', () => {
-    if (cart.length > 0 && confirm("Kosongkan keranjang belanja kasir?")) {
+  document.getElementById('btnClearCart').addEventListener('click', async () => {
+    if (cart.length === 0) return;
+    const confirmed = await showCustomConfirm({
+      title: "Kosongkan Keranjang?",
+      message: "Seluruh daftar barang yang dipilih kasir saat ini akan dibersihkan.",
+      confirmText: "Ya, Kosongkan",
+      cancelText: "Batal",
+      type: "warning",
+      icon: "ri-delete-bin-2-line"
+    });
+    if (confirmed) {
       cart = [];
       renderCart();
+      showToast("Keranjang belanja telah dikosongkan.", "info");
     }
   });
 
@@ -1331,12 +1457,20 @@ function setupEventListeners() {
     reader.readAsText(file);
   });
 
-  document.getElementById('btnResetToDefault').addEventListener('click', () => {
-    if (confirm("Reset seluruh data ke kondisi awal warung Alkamart? Semua transaksi baru akan dibersihkan.")) {
+  document.getElementById('btnResetToDefault').addEventListener('click', async () => {
+    const confirmed = await showCustomConfirm({
+      title: "Reset Seluruh Data Warung?",
+      message: "Seluruh data produk dan transaksi akan dikembalikan ke kondisi awal Alkamart. <strong>Tindakan ini tidak dapat dibatalkan!</strong>",
+      confirmText: "Ya, Reset Total",
+      cancelText: "Batal",
+      type: "danger",
+      icon: "ri-refresh-line"
+    });
+    if (confirmed) {
       store.resetToDefault();
       renderAdminView();
       renderCashierCatalog();
-      showToast("Data berhasil direset!", "info");
+      showToast("Data berhasil direset ke kondisi awal!", "info");
     }
   });
 }

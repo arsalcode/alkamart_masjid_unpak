@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=4.0">
+  <link rel="stylesheet" href="css/style.css?v=4.1">
   <link rel="stylesheet" href="css/print.css" media="print">
   <!-- Modern Vector Icons (Remix Icon & Font Awesome) -->
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
@@ -458,12 +458,52 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: KONFIRMASI MODERN (CUSTOM DIALOG) ================= -->
+  <div class="modal-overlay" id="customConfirmModal" style="z-index: 1200;">
+    <div class="modal-dialog modal-confirm-dialog">
+      <div class="confirm-icon-box danger" id="confirmIconBox">
+        <i class="ri-delete-bin-line" id="confirmIcon"></i>
+      </div>
+      <h3 class="confirm-title" id="confirmTitle">Konfirmasi Hapus</h3>
+      <p class="confirm-message" id="confirmMessage">Apakah Anda yakin ingin menghapus data ini?</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-outline" id="btnCancelConfirm">Batal</button>
+        <button type="button" class="btn btn-danger" id="btnOkConfirm">
+          <span id="confirmOkText">Ya, Hapus</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: ATUR KUANTITAS ITEM (PENGGANTI PROMPT) ================= -->
+  <div class="modal-overlay" id="customQuantityModal" style="z-index: 1200;">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <h3 id="customQtyTitle">Atur Kuantitas</h3>
+        <button class="btn-close-modal" id="btnCloseQtyModal">&times;</button>
+      </div>
+      <div class="modal-body text-center">
+        <p class="text-muted" id="customQtySub" style="margin-bottom: 12px; font-size: 13px;">Masukkan jumlah item</p>
+        <div class="qty-stepper-box">
+          <button type="button" class="btn-qty-step" id="btnQtyMinus"><i class="ri-subtract-line"></i></button>
+          <input type="number" id="inputCustomQty" min="0" value="1" class="form-input text-center font-lg" style="font-size: 22px; font-weight: 700; width: 110px;">
+          <button type="button" class="btn-qty-step" id="btnQtyPlus"><i class="ri-add-line"></i></button>
+        </div>
+        <p class="form-hint" id="customQtyStockInfo" style="margin-top: 8px;">Stok tersedia: 0</p>
+      </div>
+      <div class="modal-footer" style="justify-content: center; gap: 12px; margin-top: 16px;">
+        <button type="button" class="btn btn-outline" id="btnCancelQtyModal">Batal</button>
+        <button type="button" class="btn btn-primary" id="btnApplyQtyModal">Terapkan</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts -->
-  <script src="js/data.js?v=4.0"></script>
-  <script src="js/store.js?v=4.0"></script>
-  <script src="js/app.js?v=4.0"></script>
+  <script src="js/data.js?v=4.1"></script>
+  <script src="js/store.js?v=4.1"></script>
+  <script src="js/app.js?v=4.1"></script>
 </body>
 </html>

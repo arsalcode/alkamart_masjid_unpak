@@ -1565,6 +1565,121 @@ body {
   margin-top: 24px;
 }
 
+/* ================= MODERN CONFIRM & ALERT MODAL ================= */
+.modal-confirm-dialog {
+  max-width: 410px;
+  text-align: center;
+  padding: 32px 24px 28px 24px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  animation: modalBounceIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalBounceIn {
+  0% { opacity: 0; transform: scale(0.85) translateY(10px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.confirm-icon-box {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin: 0 auto 18px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+  transition: all 0.3s ease;
+}
+
+.confirm-icon-box.danger {
+  background: #fee2e2;
+  color: #dc2626;
+  box-shadow: 0 0 0 8px rgba(239, 68, 68, 0.15);
+}
+
+.confirm-icon-box.warning {
+  background: #fef3c7;
+  color: #d97706;
+  box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.15);
+}
+
+.confirm-icon-box.info {
+  background: #e0f2fe;
+  color: #0284c7;
+  box-shadow: 0 0 0 8px rgba(2, 132, 199, 0.15);
+}
+
+.confirm-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 10px;
+}
+
+.confirm-message {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 24px;
+  word-break: break-word;
+}
+
+.confirm-message strong {
+  color: var(--text-dark);
+}
+
+.confirm-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.confirm-actions .btn {
+  flex: 1;
+  padding: 12px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+}
+
+/* Stepper Kuantitas Modern */
+.qty-stepper-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.btn-qty-step {
+  width: 46px;
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: var(--bg-body);
+  border: 1.5px solid var(--border-color);
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-dark);
+  transition: all 0.2s ease;
+}
+
+.btn-qty-step:hover {
+  background: var(--primary-bg);
+  color: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.05);
+}
+
+.btn-qty-step:active {
+  transform: scale(0.95);
+}
+
+
 /* Photo Upload Inside Modal */
 .photo-upload-container {
   display: flex;
