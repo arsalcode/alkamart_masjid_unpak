@@ -400,25 +400,25 @@ async function autoSyncFromCloud(showNotifications = false) {
   if (!store.googleSheetsUrl || isSyncingCloud) return;
 
   const dot = document.querySelector('.status-dot');
-  const text = document.getElementById('syncStatusText');
+  const badge = document.getElementById('syncStatusBadge');
 
   isSyncingCloud = true;
-  if (text) text.textContent = 'Menyinkronkan...';
-  if (dot) dot.className = 'status-dot';
+  if (dot) dot.className = 'status-dot syncing';
+  if (badge) badge.title = 'Sedang menyinkronkan data ke Cloud...';
 
   try {
     const data = await store.fetchAllFromGoogleSheets();
     renderCashierCatalog();
     renderAdminView();
-    if (text) text.textContent = 'Google Sheets Aktif';
     if (dot) dot.className = 'status-dot online';
+    if (badge) badge.title = 'Cloud Terhubung (Klik untuk segarkan data)';
     if (showNotifications) {
       showToast('Data terbaru berhasil diperbarui dari Cloud!', 'success');
     }
   } catch (err) {
     console.warn('Auto sync cloud warning:', err);
-    if (text) text.textContent = 'Lokal (Cloud Offline)';
-    if (dot) dot.className = 'status-dot';
+    if (dot) dot.className = 'status-dot offline';
+    if (badge) badge.title = 'Cloud Terputus / Offline (Klik untuk mencoba lagi)';
     if (showNotifications) {
       showToast('Gagal menarik data cloud: ' + err.message, 'error');
     }
@@ -456,14 +456,14 @@ function switchRole() {
 // Check Sync Status
 function checkSyncStatus() {
   const dot = document.querySelector('.status-dot');
-  const text = document.getElementById('syncStatusText');
-  if (!dot || !text) return;
+  const badge = document.getElementById('syncStatusBadge');
+  if (!dot) return;
   if (store.googleSheetsUrl) {
     dot.className = 'status-dot online';
-    text.textContent = 'Google Sheets Aktif';
+    if (badge) badge.title = 'Cloud Terhubung (Klik untuk segarkan data)';
   } else {
-    dot.className = 'status-dot';
-    text.textContent = 'Lokal (LocalStorage)';
+    dot.className = 'status-dot offline';
+    if (badge) badge.title = 'Cloud Tidak Aktif (Lokal)';
   }
 }
 
