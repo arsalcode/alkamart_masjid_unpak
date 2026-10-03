@@ -377,7 +377,55 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAdminView();
   setupEventListeners();
   checkSyncStatus();
+
+  // Otomatis tarik data terbaru dari Google Sheets saat dibuka di HP
+  autoSyncFromCloud(false);
 });
+
+// Periodic Cloud Sync (setiap 45 detik saat tab aktif)
+setInterval(() => {
+  if (document.visibilityState === 'visible') {
+    autoSyncFromCloud(false);
+  }
+}, 45000);
+
+// Auto-sync saat kasir/admin kembali ke tab web Alkamart
+window.addEventListener('focus', () => {
+  autoSyncFromCloud(false);
+});
+
+// Auto-Sync Function dari Cloud Google Sheets
+let isSyncingCloud = false;
+async function autoSyncFromCloud(showNotifications = false) {
+  if (!store.googleSheetsUrl || isSyncingCloud) return;
+
+  const dot = document.querySelector('.status-dot');
+  const text = document.getElementById('syncStatusText');
+
+  isSyncingCloud = true;
+  if (text) text.textContent = 'Menyinkronkan...';
+  if (dot) dot.className = 'status-dot';
+
+  try {
+    const data = await store.fetchAllFromGoogleSheets();
+    renderCashierCatalog();
+    renderAdminView();
+    if (text) text.textContent = 'Google Sheets Aktif';
+    if (dot) dot.className = 'status-dot online';
+    if (showNotifications) {
+      showToast('Data terbaru berhasil diperbarui dari Cloud!', 'success');
+    }
+  } catch (err) {
+    console.warn('Auto sync cloud warning:', err);
+    if (text) text.textContent = 'Lokal (Cloud Offline)';
+    if (dot) dot.className = 'status-dot';
+    if (showNotifications) {
+      showToast('Gagal menarik data cloud: ' + err.message, 'error');
+    }
+  } finally {
+    isSyncingCloud = false;
+  }
+}
 
 // Switch Role (Kasir <-> Admin)
 function initRoleView() {
@@ -661,6 +709,9 @@ function processCheckout() {
     totalAmount: totalPrice,
     paidAmount: paid,
     changeAmount: paid - totalPrice,
+    total: totalPrice,
+    paid: paid,
+    change: paid - totalPrice,
     items: [...cart],
     itemsSummary: cart.map(i => `${i.name} (${i.quantity})`).join(', ')
   };
@@ -939,6 +990,14 @@ function renderReportsTab() {
 function setupEventListeners() {
   // Switch Role
   document.getElementById('btnSwitchRole').addEventListener('click', switchRole);
+
+  // Status Badge Click (Manual Cloud Refresh)
+  const syncBadge = document.getElementById('syncStatusBadge');
+  if (syncBadge) {
+    syncBadge.addEventListener('click', () => {
+      autoSyncFromCloud(true);
+    });
+  }
 
   // Mobile Cart Drawer
   const mobileCartToggle = document.getElementById('btnToggleCartMobile');

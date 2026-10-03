@@ -10,6 +10,8 @@ const STORAGE_KEYS = {
   ROLE: 'alkamart_active_role_v5'
 };
 
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbw9_ls77fF7vA83B5xmGz-HokYsjGvddiB4p6RAgjJHuPRjHqg_GO-cvsbo3pH8q-On/exec';
+
 class AlkamartStore {
   constructor() {
     this.products = [];
@@ -66,8 +68,9 @@ class AlkamartStore {
       this.saveSales();
     }
 
-    // 3. Load Configs
-    this.googleSheetsUrl = localStorage.getItem(STORAGE_KEYS.GOOGLE_SHEETS_URL) || '';
+    // 3. Load Configs (Default to central Google Sheets URL if not explicitly changed)
+    const savedUrl = localStorage.getItem(STORAGE_KEYS.GOOGLE_SHEETS_URL);
+    this.googleSheetsUrl = (savedUrl && savedUrl.trim()) ? savedUrl.trim() : DEFAULT_GSHEET_URL;
     this.activeRole = localStorage.getItem(STORAGE_KEYS.ROLE) || 'cashier';
   }
 
@@ -85,7 +88,7 @@ class AlkamartStore {
   }
 
   setGoogleSheetsUrl(url) {
-    this.googleSheetsUrl = url.trim();
+    this.googleSheetsUrl = url.trim() || DEFAULT_GSHEET_URL;
     localStorage.setItem(STORAGE_KEYS.GOOGLE_SHEETS_URL, this.googleSheetsUrl);
   }
 
@@ -93,6 +96,9 @@ class AlkamartStore {
   addProduct(product) {
     this.products.unshift(product);
     this.saveProducts();
+    if (this.googleSheetsUrl) {
+      this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on addProduct:", err));
+    }
   }
 
   updateProduct(id, updatedData) {
@@ -100,12 +106,18 @@ class AlkamartStore {
     if (idx !== -1) {
       this.products[idx] = { ...this.products[idx], ...updatedData };
       this.saveProducts();
+      if (this.googleSheetsUrl) {
+        this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on updateProduct:", err));
+      }
     }
   }
 
   deleteProduct(id) {
     this.products = this.products.filter(p => p.id !== id);
     this.saveProducts();
+    if (this.googleSheetsUrl) {
+      this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on deleteProduct:", err));
+    }
   }
 
   updateStock(productId, newStock) {
@@ -113,6 +125,9 @@ class AlkamartStore {
     if (prod) {
       prod.stock = Math.max(0, newStock);
       this.saveProducts();
+      if (this.googleSheetsUrl) {
+        this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on updateStock:", err));
+      }
     }
   }
 
@@ -139,6 +154,9 @@ class AlkamartStore {
   deleteSale(saleId) {
     this.sales = this.sales.filter(s => s.id !== saleId);
     this.saveSales();
+    if (this.googleSheetsUrl) {
+      this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on deleteSale:", err));
+    }
   }
 
   // --- Google Sheets Sync Adapter (CORS Safe) ---
@@ -173,14 +191,19 @@ class AlkamartStore {
       const res = await fetch(this.googleSheetsUrl + '?action=getAll');
       const data = await res.json();
 
-      if (data.products && Array.isArray(data.products) && data.products.length > 0) {
-        this.products = data.products;
-        this.saveProducts();
-      }
+      if (data.status === 'success') {
+        if (data.products && Array.isArray(data.products) && data.products.length > 0) {
+          this.products = data.products;
+          this.saveProducts();
+        } else if (this.products && this.products.length > 0) {
+          // Jika spreadsheet baru dan masih kosong, isi otomatis dari data lokal
+          this.syncAllToGoogleSheets().catch(e => console.warn("Auto-populate error:", e));
+        }
 
-      if (data.sales && Array.isArray(data.sales)) {
-        this.sales = data.sales;
-        this.saveSales();
+        if (data.sales && Array.isArray(data.sales) && data.sales.length > 0) {
+          this.sales = data.sales;
+          this.saveSales();
+        }
       }
 
       return data;
@@ -198,6 +221,7 @@ class AlkamartStore {
 
       await fetch(this.googleSheetsUrl, {
         method: 'POST',
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({
           action: 'addSale',

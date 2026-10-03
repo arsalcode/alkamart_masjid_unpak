@@ -39,7 +39,7 @@ function doGet(e) {
     return createJsonResponse({ status: 'error', message: err.toString() });
   }
 }
-dddd
+
 function doPost(e) {
   try {
     const postData = JSON.parse(e.postData.contents);
@@ -204,9 +204,9 @@ function appendSingleSale(ss, sale) {
   sheet.appendRow([
     sale.id || '',
     sale.date || new Date().toLocaleString("id-ID"),
-    sale.total || 0,
-    sale.paid || 0,
-    sale.change || 0,
+    sale.total || sale.totalAmount || 0,
+    sale.paid || sale.paidAmount || 0,
+    sale.change || sale.changeAmount || 0,
     itemsSummary
   ]);
 }
@@ -233,9 +233,9 @@ function saveSales(ss, sales) {
     return [
       s.id || '',
       s.date || '',
-      s.total || 0,
-      s.paid || 0,
-      s.change || 0,
+      s.total || s.totalAmount || 0,
+      s.paid || s.paidAmount || 0,
+      s.change || s.changeAmount || 0,
       itemsSummary
     ];
   });
