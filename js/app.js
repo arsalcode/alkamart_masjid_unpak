@@ -433,6 +433,9 @@ function initRoleView() {
   document.getElementById('cashierView').classList.toggle('active', isKasir);
   document.getElementById('adminView').classList.toggle('active', !isKasir);
   
+  document.body.classList.toggle('role-admin', !isKasir);
+  document.body.classList.toggle('role-cashier', isKasir);
+
   const badge = document.getElementById('currentRoleBadge');
   if (badge) {
     badge.textContent = isKasir ? 'Mode Kasir' : 'Mode Admin';
@@ -440,6 +443,18 @@ function initRoleView() {
   }
 
   document.getElementById('switchRoleText').textContent = isKasir ? 'Ganti ke Admin' : 'Ganti ke Kasir';
+
+  // Sembunyikan tombol keranjang belanja mobile jika sedang di Mode Admin
+  const cartToggleBtn = document.getElementById('btnToggleCartMobile');
+  if (cartToggleBtn) {
+    cartToggleBtn.style.setProperty('display', isKasir ? 'inline-flex' : 'none', 'important');
+  }
+
+  // Pastikan drawer keranjang kasir tertutup saat membuka admin
+  const cartSidebar = document.getElementById('cartSidebar');
+  if (cartSidebar && !isKasir) {
+    cartSidebar.classList.remove('open');
+  }
 }
 
 function switchRole() {
