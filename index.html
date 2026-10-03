@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=4.1">
+  <link rel="stylesheet" href="css/style.css?v=4.2">
   <link rel="stylesheet" href="css/print.css" media="print">
   <!-- Modern Vector Icons (Remix Icon & Font Awesome) -->
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
@@ -176,14 +176,21 @@
             </div>
           </div>
 
-          <div class="action-buttons-group">
-            <input type="text" id="adminProductSearch" placeholder="Cari barang admin..." class="admin-search-input">
-            <button class="btn btn-excel" id="btnExportProductsExcel" title="Unduh Stok Barang ke Excel/CSV">
-              <i class="ri-file-excel-2-fill"></i> <span>Unduh Stok (Excel)</span>
-            </button>
-            <button class="btn btn-primary" id="btnOpenAddProductModal">
-              <i class="ri-add-circle-line"></i> <span>Tambah Barang Baru</span>
-            </button>
+          <div class="admin-controls-wrapper">
+            <div class="action-buttons-group">
+              <button class="btn btn-excel" id="btnExportProductsExcel" title="Unduh Stok Barang ke Excel/CSV">
+                <i class="ri-file-excel-2-fill"></i> <span>Unduh Stok (Excel)</span>
+              </button>
+              <button class="btn btn-primary" id="btnOpenAddProductModal">
+                <i class="ri-add-circle-line"></i> <span>Tambah Barang Baru</span>
+              </button>
+            </div>
+
+            <div class="search-input-wrapper admin-search-wrapper" id="adminSearchWrapper">
+              <span class="search-icon"><i class="ri-search-line"></i></span>
+              <input type="text" id="adminProductSearch" placeholder="Cari barang admin..." autocomplete="off">
+              <button class="clear-search-btn" id="adminClearSearch">&times;</button>
+            </div>
           </div>
         </div>
 
@@ -502,8 +509,8 @@
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts -->
-  <script src="js/data.js?v=4.1"></script>
-  <script src="js/store.js?v=4.1"></script>
-  <script src="js/app.js?v=4.1"></script>
+  <script src="js/data.js?v=4.2"></script>
+  <script src="js/store.js?v=4.2"></script>
+  <script src="js/app.js?v=4.2"></script>
 </body>
 </html>

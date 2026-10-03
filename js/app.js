@@ -1253,8 +1253,37 @@ function setupEventListeners() {
     });
   });
 
-  // Admin Product Search
-  document.getElementById('adminProductSearch')?.addEventListener('input', renderAdminProductsTable);
+  // Admin Product Search dengan Clear Button & Auto Scroll ke Atas saat Keyboard Terbuka di HP
+  const adminSearchInput = document.getElementById('adminProductSearch');
+  const adminClearBtn = document.getElementById('adminClearSearch');
+  const adminSearchWrapper = document.getElementById('adminSearchWrapper');
+
+  if (adminSearchInput) {
+    adminSearchInput.addEventListener('input', () => {
+      if (adminClearBtn) {
+        adminClearBtn.style.display = adminSearchInput.value ? 'block' : 'none';
+      }
+      renderAdminProductsTable();
+    });
+
+    if (adminClearBtn) {
+      adminClearBtn.addEventListener('click', () => {
+        adminSearchInput.value = '';
+        adminClearBtn.style.display = 'none';
+        renderAdminProductsTable();
+        adminSearchInput.focus();
+      });
+    }
+
+    // Auto-scroll ke posisi pencarian saat keyboard HP muncul agar tabel produk langsung terlihat
+    adminSearchInput.addEventListener('focus', () => {
+      if (window.innerWidth <= 768) {
+        setTimeout(() => {
+          adminSearchWrapper?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 280);
+      }
+    });
+  }
 
   // Add Product Modal
   document.getElementById('btnOpenAddProductModal').addEventListener('click', openAddProductModal);

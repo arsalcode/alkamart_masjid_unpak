@@ -1251,19 +1251,20 @@ body {
   color: var(--primary);
 }
 
+.admin-controls-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .action-buttons-group {
   display: flex;
   gap: 10px;
 }
 
-.admin-search-input {
-  height: 42px;
-  padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  font-family: inherit;
-  font-size: 13px;
-  background: white;
+.admin-search-wrapper {
+  min-width: 260px;
 }
 
 /* Custom Table */
@@ -1874,10 +1875,44 @@ body {
   .admin-action-bar {
     flex-direction: column;
     align-items: stretch;
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .admin-controls-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
   }
 
   .action-buttons-group {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .action-buttons-group .btn {
+    padding: 10px 8px;
+    font-size: 13px;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .admin-search-wrapper {
+    width: 100%;
+    min-width: 0;
+    position: sticky;
+    top: 64px;
+    z-index: 25;
+    background: var(--bg-body);
+    padding: 2px 0;
+  }
+
+  .admin-search-wrapper input {
+    height: 44px;
+    box-shadow: var(--shadow-sm);
   }
 }
 
@@ -1956,6 +1991,33 @@ body {
 
   .btn-add-cart {
     padding: 6.5px 6px;
+    font-size: 12px;
+  }
+
+  /* Compact Stats Mini Cards di HP agar menghemat ruang layar */
+  .stats-mini-cards {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+  }
+
+  .mini-card {
+    padding: 8px 12px;
+  }
+
+  .mini-card .card-label {
+    font-size: 11px;
+  }
+
+  .mini-card .card-number {
+    font-size: 16px;
+  }
+
+  /* Tabel Produk lebih padat di HP */
+  .custom-table th,
+  .custom-table td {
+    padding: 10px 8px;
     font-size: 12px;
   }
 }
