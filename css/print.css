@@ -1,27 +1,206 @@
-/* Print Stylesheet for Thermal Printer 58mm / 80mm */
+/* ===================================================
+   PRINT STYLESHEET - STRUK / NOTA TRANSAKSI ALKAMART
+   Mendukung: Printer Thermal 58mm / 80mm & Printer Standar (Epson L3216, Canon, HP A4/F4)
+   =================================================== */
+
 @media print {
-  body * {
-    visibility: hidden;
-  }
-  
-  #printableReceipt, #printableReceipt * {
-    visibility: visible;
-  }
-  
-  #printableReceipt {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    max-width: 58mm;
-    margin: 0;
-    padding: 0;
-    border: none;
-    font-size: 10pt;
-    line-height: 1.2;
+  @page {
+    size: auto;
+    margin: 5mm;
   }
 
-  .no-print {
+  /* Reset body dan html agar tidak terpotong oleh overflow atau flex */
+  html, body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Sembunyikan semua elemen aplikasi utama */
+  header,
+  main,
+  footer,
+  nav,
+  .top-nav,
+  .main-container,
+  .bottom-nav,
+  .toast-container,
+  .modal-overlay:not(#receiptModal),
+  .no-print,
+  #receiptModal .modal-actions-footer,
+  body > *:not(#receiptModal) {
     display: none !important;
+  }
+
+  /* Reset modal overlay struk agar tidak fixed dan tidak clipping di tengah layar */
+  .modal-overlay#receiptModal,
+  body > #receiptModal {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    inset: auto !important;
+  }
+
+  /* Reset dialog modal */
+  .modal-overlay#receiptModal .modal-dialog,
+  .modal-dialog.modal-receipt {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Desain Struk Nota Kasir */
+  #printableReceipt,
+  .receipt-container {
+    display: block !important;
+    position: relative !important;
+    width: 100% !important;
+    max-width: 78mm !important; /* Pas untuk thermal 80mm & proporsional rapi di printer A4 seperti Epson L3216 */
+    margin: 0 auto !important;
+    padding: 10px 14px !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px dashed #555 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 10.5pt !important;
+    line-height: 1.35 !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  #printableReceipt * {
+    color: #000000 !important;
+    background: transparent !important;
+    box-sizing: border-box !important;
+    visibility: visible !important;
+  }
+
+  /* Header Struk */
+  .receipt-header {
+    text-align: center !important;
+    margin-bottom: 6px !important;
+  }
+
+  .store-name {
+    font-size: 13.5pt !important;
+    font-weight: 800 !important;
+    margin: 0 0 3px 0 !important;
+    letter-spacing: 0.5px !important;
+  }
+
+  .store-address,
+  .store-phone {
+    font-size: 9pt !important;
+    margin: 2px 0 !important;
+    color: #111 !important;
+  }
+
+  /* Garis Pembatas Putus-Putus */
+  .dashed-divider {
+    border: none !important;
+    border-top: 1px dashed #000 !important;
+    margin: 6px 0 !important;
+    width: 100% !important;
+  }
+
+  /* Metadata Nota (ID, Kasir, Waktu) */
+  .receipt-meta {
+    font-size: 9pt !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    margin: 5px 0 !important;
+  }
+
+  .receipt-meta div {
+    display: flex !important;
+    justify-content: space-between !important;
+  }
+
+  /* Daftar Produk Belanja */
+  .receipt-items-table {
+    margin: 6px 0 !important;
+  }
+
+  .receipt-item-line {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    margin-top: 4px !important;
+  }
+
+  .receipt-item-calc {
+    font-size: 8.5pt !important;
+    color: #222 !important;
+    margin-bottom: 4px !important;
+    padding-left: 2px !important;
+  }
+
+  /* Rincian Total, Bayar, Kembalian */
+  .receipt-totals {
+    margin: 6px 0 !important;
+  }
+
+  .receipt-total-row {
+    display: flex !important;
+    justify-content: space-between !important;
+    font-size: 10pt !important;
+    margin: 3px 0 !important;
+  }
+
+  .receipt-total-row strong {
+    font-size: 11pt !important;
+    font-weight: 800 !important;
+  }
+
+  /* Footer Struk */
+  .receipt-footer {
+    text-align: center !important;
+    margin-top: 10px !important;
+  }
+
+  .receipt-footer p {
+    font-size: 8.5pt !important;
+    margin: 2px 0 !important;
+  }
+
+  .barcode-font {
+    font-size: 12pt !important;
+    letter-spacing: 3px !important;
+    font-weight: bold !important;
+    margin-top: 5px !important;
   }
 }
