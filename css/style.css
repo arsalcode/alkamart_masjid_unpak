@@ -1739,12 +1739,28 @@ table th,
   color: #0f172a;
 }
 
-.btn-close-modal {
-  background: none;
+.btn-close-modal,
+.modal-close {
+  background: transparent;
   border: none;
-  font-size: 24px;
+  font-size: 20px;
   color: var(--text-muted);
   cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.btn-close-modal:hover,
+.modal-close:hover {
+  background: #F1F5F9;
+  color: var(--text-dark);
 }
 
 .modal-footer {

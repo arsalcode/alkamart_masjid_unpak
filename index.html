@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="css/style.css?v=5.0">
   <link rel="stylesheet" href="css/print.css?v=4.4" media="print">
   <!-- Modern Vector Icons (Remix Icon & Font Awesome) -->
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body>
@@ -59,7 +59,7 @@
           <div class="search-input-wrapper">
             <span class="search-icon"><i class="ri-search-line"></i></span>
             <input type="text" id="cashierSearchInput" placeholder="Cari nama barang atau scan..." autocomplete="off">
-            <button class="clear-search-btn" id="cashierClearSearch">&times;</button>
+            <button class="clear-search-btn" id="cashierClearSearch" aria-label="Clear"><i class="ri-close-line"></i></button>
           </div>
 
           <!-- Kategori Kancing -->
@@ -86,7 +86,7 @@
             <span class="cart-item-count" id="cartTotalItemsCount">0 Item</span>
           </div>
           <button class="btn-clear-cart" id="btnClearCart" title="Kosongkan Keranjang"><i class="ri-delete-bin-line"></i> Bersihkan</button>
-          <button class="btn-close-cart mobile-only" id="btnCloseCartMobile">&times;</button>
+          <button class="btn-close-cart mobile-only" id="btnCloseCartMobile" aria-label="Tutup"><i class="ri-close-line"></i></button>
         </div>
 
         <!-- List Item Keranjang -->
@@ -210,7 +210,7 @@
             <div class="search-input-wrapper admin-search-wrapper" id="adminSearchWrapper">
               <span class="search-icon"><i class="ri-search-line"></i></span>
               <input type="text" id="adminProductSearch" placeholder="Cari barang admin..." autocomplete="off">
-              <button class="clear-search-btn" id="adminClearSearch">&times;</button>
+              <button class="clear-search-btn" id="adminClearSearch" aria-label="Clear"><i class="ri-close-line"></i></button>
             </div>
 
             <div class="action-buttons-group">
@@ -423,7 +423,7 @@
             <i class="ri-lock-password-line" style="color: var(--primary);"></i> Login Mode Admin
           </h3>
         </div>
-        <button class="modal-close" onclick="closeAdminAuthModal()">&times;</button>
+        <button class="btn-close-modal" onclick="closeAdminAuthModal()" aria-label="Tutup"><i class="ri-close-line"></i></button>
       </div>
       <form id="adminAuthForm" onsubmit="event.preventDefault(); verifyAdminPassword();">
         <div class="modal-body">
@@ -507,7 +507,7 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <h3 id="productModalTitle">Tambah Barang Baru</h3>
-        <button class="btn-close-modal" id="btnCloseProductModal">&times;</button>
+        <button class="btn-close-modal" id="btnCloseProductModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
       </div>
       <form id="productForm">
         <input type="hidden" id="formProductId">
@@ -590,7 +590,7 @@
     <div class="modal-dialog modal-sm">
       <div class="modal-header">
         <h3>Tambah Stok Cepat</h3>
-        <button class="btn-close-modal" id="btnCloseRestockModal">&times;</button>
+        <button class="btn-close-modal" id="btnCloseRestockModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
       </div>
       <div class="modal-body">
         <h4 id="restockProductName" class="restock-item-title">-</h4>
@@ -630,7 +630,7 @@
     <div class="modal-dialog modal-sm">
       <div class="modal-header">
         <h3 id="customQtyTitle">Atur Kuantitas</h3>
-        <button class="btn-close-modal" id="btnCloseQtyModal">&times;</button>
+        <button class="btn-close-modal" id="btnCloseQtyModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
       </div>
       <div class="modal-body text-center">
         <p class="text-muted" id="customQtySub" style="margin-bottom: 12px; font-size: 13px;">Masukkan jumlah item</p>
@@ -656,7 +656,7 @@
           <h3 style="margin: 0;">📝 Catat Penjualan Manual</h3>
           <p class="text-muted" style="margin: 2px 0 0; font-size: 12px;">Untuk transaksi saat warung tutup atau tanpa kasir</p>
         </div>
-        <button class="btn-close-modal" id="btnCloseManualSaleModal">&times;</button>
+        <button class="btn-close-modal" id="btnCloseManualSaleModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
       </div>
 
       <div class="modal-body" style="padding-top: 12px;">
@@ -742,7 +742,7 @@
           <h3 style="margin: 0;">💸 Tarik Uang / Kas Keluar</h3>
           <p class="text-muted" style="margin: 2px 0 0; font-size: 12px;">Catat pengeluaran kas warung agar saldo selalu akurat</p>
         </div>
-        <button class="btn-close-modal" id="btnCloseWithdrawalModal">&times;</button>
+        <button class="btn-close-modal" id="btnCloseWithdrawalModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
       </div>
 
       <form id="withdrawalForm">
