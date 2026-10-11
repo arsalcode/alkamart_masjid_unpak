@@ -416,7 +416,8 @@ class AlkamartStore {
         body: JSON.stringify({
           action: 'addSale',
           sale: sale,
-          stockUpdates: stockUpdates
+          stockUpdates: stockUpdates,
+          financialSummary: this.getFinancialSummary()
         })
       });
     } catch (err) {
