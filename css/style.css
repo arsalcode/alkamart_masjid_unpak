@@ -2714,3 +2714,47 @@ body:has(#adminView.active) #btnToggleCartMobile {
 #withdrawalModal .modal-footer {
   margin-top: 18px;
 }
+
+/* ================= TOMBOL SIMPAN PENJUALAN MANUAL (TRANSPARAN VS HIJAU AKTIF) ================= */
+#btnSaveManualSale:disabled,
+#btnSaveManualSale.btn-disabled {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  transform: none !important;
+}
+
+#btnSaveManualSale:not(:disabled):not(.btn-disabled) {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(0, 107, 67, 0.28) !important;
+  transition: all 0.25s ease;
+}
+
+#btnSaveManualSale:not(:disabled):not(.btn-disabled):hover {
+  background: var(--primary-dark) !important;
+  transform: translateY(-1px);
+}
+
+.custom-select-options li.disabled-option {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: transparent !important;
+  color: #94a3b8 !important;
+}
+
+select, option {
+  accent-color: var(--primary);
+}
+
+select option:checked,
+select option:hover {
+  background-color: var(--primary) !important;
+  color: #ffffff !important;
+}

@@ -453,7 +453,7 @@
         <!-- Kepala Nota -->
         <div class="receipt-header">
           <h2 class="store-name">ALKAMART WARUNG</h2>
-          <p class="store-address">Jl. Raya Alkamart No. 12, Indonesia</p>
+          <p class="store-address">Jl. Raya Menuju Syurga</p>
           <p class="store-phone">WhatsApp: 0812-3456-7890</p>
           <div class="dashed-divider"></div>
           <div class="receipt-meta">
@@ -667,9 +667,15 @@
         <div class="manual-sale-add-bar" style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; flex-wrap: wrap;">
           <div class="form-group" style="flex: 2; min-width: 160px; margin-bottom: 0;">
             <label for="manualSaleProductSelect">Pilih Barang:</label>
-            <select id="manualSaleProductSelect" class="form-input">
-              <option value="">-- Pilih Barang --</option>
-            </select>
+            <div class="custom-select-wrapper" id="manualProductSelectWrapper">
+              <input type="hidden" id="manualSaleProductSelect" value="">
+              <div class="custom-select-trigger" id="manualProductSelectTrigger">
+                <span class="custom-select-value" id="manualProductSelectValue">-- Pilih Barang --</span>
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+              <ul class="custom-select-options" id="manualProductSelectOptions" style="max-height: 220px; overflow-y: auto;">
+              </ul>
+            </div>
           </div>
           <div class="form-group" style="flex: 1; min-width: 80px; margin-bottom: 0;">
             <label for="manualSaleQtyInput">Jumlah:</label>
@@ -709,11 +715,18 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label for="manualSalePayMethod">Metode Pembayaran:</label>
-            <select id="manualSalePayMethod" class="form-input">
-              <option value="cash">💵 Tunai (Cash)</option>
-              <option value="qris">📱 QRIS</option>
-            </select>
+            <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px;">Metode Pembayaran:</label>
+            <input type="hidden" id="manualSalePayMethod" value="cash">
+            <div class="withdrawal-source-selector" id="manualSalePayMethodSelector">
+              <button type="button" class="btn-source-pill source-cash active" data-method="cash" onclick="selectManualSalePayMethod('cash')">
+                <i class="ri-money-dollar-circle-fill"></i>
+                <span>Tunai</span>
+              </button>
+              <button type="button" class="btn-source-pill source-qris" data-method="qris" onclick="selectManualSalePayMethod('qris')">
+                <i class="ri-qr-code-fill"></i>
+                <span>QRIS</span>
+              </button>
+            </div>
           </div>
 
           <div class="form-group">
@@ -730,7 +743,7 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" id="btnCancelManualSaleModal">Batal</button>
-        <button type="button" class="btn btn-primary" id="btnSaveManualSale">
+        <button type="button" class="btn btn-primary" id="btnSaveManualSale" disabled>
           <i class="ri-check-line"></i> Simpan Penjualan & Potong Stok
         </button>
       </div>

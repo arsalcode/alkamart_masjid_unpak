@@ -1345,15 +1345,45 @@ window.deleteWithdrawalById = async function(id) {
 // ==========================================
 let manualSaleItems = [];
 
-function openManualSaleModal() {
-  const selectEl = document.getElementById('manualSaleProductSelect');
-  if (selectEl) {
-    selectEl.innerHTML = '<option value="">-- Pilih Barang --</option>' + store.products.map(p => `
-      <option value="${p.id}" ${p.stock <= 0 ? 'disabled' : ''}>
-        ${p.name} - ${formatRp(p.price)} (Sisa: ${p.stock})
-      </option>
-    `).join('');
+function selectManualSalePayMethod(method) {
+  const hiddenInput = document.getElementById('manualSalePayMethod');
+  if (hiddenInput) hiddenInput.value = method;
+
+  const selector = document.getElementById('manualSalePayMethodSelector');
+  if (selector) {
+    const btnCash = selector.querySelector('.source-cash');
+    const btnQris = selector.querySelector('.source-qris');
+    if (btnCash && btnQris) {
+      if (method === 'cash') {
+        btnCash.classList.add('active');
+        btnQris.classList.remove('active');
+      } else {
+        btnQris.classList.add('active');
+        btnCash.classList.remove('active');
+      }
+    }
   }
+}
+window.selectManualSalePayMethod = selectManualSalePayMethod;
+
+function openManualSaleModal() {
+  const optionsList = document.getElementById('manualProductSelectOptions');
+  const valSpan = document.getElementById('manualProductSelectValue');
+  const hiddenInput = document.getElementById('manualSaleProductSelect');
+
+  if (hiddenInput) hiddenInput.value = '';
+  if (valSpan) valSpan.textContent = '-- Pilih Barang --';
+
+  if (optionsList) {
+    optionsList.innerHTML = '<li data-value="" style="color: var(--text-muted);">-- Pilih Barang --</li>' +
+      store.products.map(p => `
+        <li data-value="${p.id}" ${p.stock <= 0 ? 'class="disabled-option"' : ''}>
+          <span><strong>${p.name}</strong> - ${formatRp(p.price)} <small style="opacity: 0.75;">(Sisa: ${p.stock})</small></span>
+        </li>
+      `).join('');
+  }
+
+  selectManualSalePayMethod('cash');
 
   manualSaleItems = [];
   renderManualSaleItemsTable();
@@ -1376,16 +1406,25 @@ function openManualSaleModal() {
 function renderManualSaleItemsTable() {
   const tbody = document.getElementById('manualSaleItemsTableBody');
   const totalText = document.getElementById('manualSaleTotalText');
+  const saveBtn = document.getElementById('btnSaveManualSale');
   if (!tbody) return;
 
   if (manualSaleItems.length === 0) {
     tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 18px;">Belum ada barang yang dipilih.</td></tr>';
     if (totalText) totalText.textContent = 'Rp 0';
+    if (saveBtn) {
+      saveBtn.setAttribute('disabled', 'true');
+      saveBtn.classList.add('btn-disabled');
+    }
     return;
   }
 
   const total = manualSaleItems.reduce((sum, item) => sum + item.subtotal, 0);
   if (totalText) totalText.textContent = formatRp(total);
+  if (saveBtn) {
+    saveBtn.removeAttribute('disabled');
+    saveBtn.classList.remove('btn-disabled');
+  }
 
   tbody.innerHTML = manualSaleItems.map((item, idx) => `
     <tr>
@@ -1447,7 +1486,9 @@ function addProductToManualSale() {
   }
 
   renderManualSaleItemsTable();
-  selectEl.value = '';
+  if (selectEl) selectEl.value = '';
+  const valSpan = document.getElementById('manualProductSelectValue');
+  if (valSpan) valSpan.textContent = '-- Pilih Barang --';
   qtyEl.value = '1';
   showToast(`"${prod.name}" (${qty} pcs) ditambahkan ke daftar manual.`, "info");
 }
@@ -2144,6 +2185,36 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
       if (categorySelectWrapper && !categorySelectWrapper.contains(e.target)) {
         categorySelectWrapper.classList.remove('open');
+      }
+    });
+  }
+
+  // Custom Select untuk Barang Penjualan Manual
+  const manualWrapper = document.getElementById('manualProductSelectWrapper');
+  const manualTrigger = document.getElementById('manualProductSelectTrigger');
+  const manualOptions = document.getElementById('manualProductSelectOptions');
+  const manualHidden = document.getElementById('manualSaleProductSelect');
+  const manualVal = document.getElementById('manualProductSelectValue');
+
+  if (manualTrigger && manualOptions) {
+    manualTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      manualWrapper.classList.toggle('open');
+    });
+
+    manualOptions.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (!li || li.classList.contains('disabled-option')) return;
+      const val = li.getAttribute('data-value') || '';
+      if (manualHidden) manualHidden.value = val;
+      if (manualVal) manualVal.innerHTML = li.innerHTML;
+      if (manualWrapper) manualWrapper.classList.remove('open');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (manualWrapper && !manualWrapper.contains(e.target)) {
+        manualWrapper.classList.remove('open');
       }
     });
   }
