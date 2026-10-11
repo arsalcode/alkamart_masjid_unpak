@@ -1529,6 +1529,9 @@ function saveManualSale() {
   renderCashierCatalog();
   renderReportsTab();
 
+  // Buka Pop-up Struk Transaksi Otomatis agar kasir/admin bisa langsung Cetak Struk / Kirim WhatsApp
+  openReceiptModal(sale);
+
   showToast(`Penjualan manual senilai ${formatRp(totalPrice)} berhasil dicatat!`, "success");
 }
 
