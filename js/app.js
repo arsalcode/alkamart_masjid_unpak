@@ -1293,7 +1293,7 @@ function renderWithdrawalsTable() {
   if (!tbody) return;
 
   if (!store.withdrawals || store.withdrawals.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-muted);">Belum ada catatan penarikan kas / pengeluaran uang.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 24px; color: var(--text-muted);">Belum ada catatan penarikan kas / pengeluaran uang.</td></tr>';
     return;
   }
 
@@ -1308,8 +1308,7 @@ function renderWithdrawalsTable() {
         <td>${formatDateTime(w.date)}</td>
         <td><strong style="color: #d97706; font-size: 14px;">${formatRp(w.amount)}</strong></td>
         <td>${sourceBadge}</td>
-        <td><span class="badge-cat">${w.category || 'Lainnya'}</span></td>
-        <td style="max-width: 280px;">${w.notes || '-'}</td>
+        <td style="max-width: 320px;">${w.notes || '-'}</td>
         <td>
           <button class="btn btn-danger-outline btn-sm" style="padding: 0 10px;" onclick="deleteWithdrawalById('${w.id}')" title="Hapus catatan">
             <i class="ri-delete-bin-line"></i>
@@ -1326,7 +1325,7 @@ window.deleteWithdrawalById = async function(id) {
 
   const confirmed = await showCustomConfirm({
     title: "Hapus Catatan Tarik Uang?",
-    message: `Hapus catatan penarikan <strong>${formatRp(w.amount)}</strong> (${w.category})?<br><small style="color: var(--text-muted); display:inline-block; margin-top:6px;">Saldo kas akan otomatis disesuaikan kembali.</small>`,
+    message: `Hapus catatan penarikan <strong>${formatRp(w.amount)}</strong>${w.notes ? ` (${w.notes})` : ''}?<br><small style="color: var(--text-muted); display:inline-block; margin-top:6px;">Saldo kas akan otomatis disesuaikan kembali.</small>`,
     confirmText: "Ya, Hapus",
     cancelText: "Batal",
     type: "danger",
@@ -1645,7 +1644,7 @@ async function handleWithdrawalSubmit(e) {
 
   document.getElementById('withdrawalModal').classList.remove('active');
   renderReportsTab();
-  showToast(`Penarikan kas ${formatRp(amount)} (${category}) berhasil dicatat!`, "success");
+  showToast(`Penarikan kas ${formatRp(amount)} berhasil dicatat!`, "success");
 }
 
 // ==========================================
