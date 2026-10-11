@@ -1064,6 +1064,8 @@ function renderAdminProductsTable() {
     `;
     return;
   }
+
+  tbody.innerHTML = filtered.map(p => {
     let statusClass = 'in-stock';
     let statusLabel = 'Tersedia';
     if (p.stock <= 0) {
