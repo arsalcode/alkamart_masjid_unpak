@@ -35,14 +35,19 @@
   .modal-overlay:not(#receiptModal),
   .no-print,
   #receiptModal .modal-actions-footer,
+  #receiptModal .modal-header,
+  #receiptModal .btn-close-modal,
+  #receiptModal .modal-close,
   body > *:not(#receiptModal) {
     display: none !important;
   }
 
-  /* Reset modal overlay struk agar tidak fixed dan tidak clipping di tengah layar */
+  /* Reset modal overlay struk agar tampil bersih di cetakan */
+  #receiptModal,
   .modal-overlay#receiptModal,
   body > #receiptModal {
     display: block !important;
+    visibility: visible !important;
     position: static !important;
     width: 100% !important;
     height: auto !important;
@@ -50,7 +55,7 @@
     max-height: none !important;
     padding: 0 !important;
     margin: 0 !important;
-    background: transparent !important;
+    background: #ffffff !important;
     backdrop-filter: none !important;
     overflow: visible !important;
     box-shadow: none !important;
