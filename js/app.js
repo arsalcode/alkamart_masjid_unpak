@@ -595,6 +595,16 @@ function renderCashierCatalog() {
   });
 
   if (filtered.length === 0) {
+    if (store.products.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 50px 20px; color: var(--text-muted);">
+          <p style="font-size: 42px; color: var(--primary); margin-bottom: 10px;"><i class="ri-store-2-line"></i></p>
+          <p style="font-size: 16px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Katalog Produk Masih Kosong</p>
+          <small>Silakan tambahkan barang baru dengan foto di menu <strong>Admin &rarr; Kelola Barang</strong>.</small>
+        </div>`;
+      return;
+    }
+
     grid.innerHTML = `
       <div style="grid-column: 1/-1; text-align: center; padding: 40px; color: var(--text-muted);">
         <p style="font-size: 38px; color: var(--primary); margin-bottom: 8px;"><i class="ri-search-eye-line"></i></p>
@@ -1040,7 +1050,20 @@ function renderAdminProductsTable() {
 
   const filtered = store.products.filter(p => p.name.toLowerCase().includes(query) || (p.category && p.category.toLowerCase().includes(query)));
 
-  tbody.innerHTML = filtered.map(p => {
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align: center; padding: 50px 20px; color: var(--text-muted);">
+          <i class="ri-inbox-line" style="font-size: 38px; display: block; margin-bottom: 10px; color: var(--primary);"></i>
+          <strong style="display: block; font-size: 15px; color: var(--text-main); margin-bottom: 4px;">
+            ${store.products.length === 0 ? 'Inventaris Barang Masih Kosong (0 Produk)' : 'Tidak ada produk yang cocok dengan pencarian'}
+          </strong>
+          <small>${store.products.length === 0 ? 'Klik tombol <strong>+ Tambah Barang</strong> di atas untuk mulai memasukkan foto & data produk.' : 'Periksa kembali kata kunci pencarian Anda.'}</small>
+        </td>
+      </tr>
+    `;
+    return;
+  }
     let statusClass = 'in-stock';
     let statusLabel = 'Tersedia';
     if (p.stock <= 0) {
@@ -1924,6 +1947,33 @@ function setupEventListeners() {
         setTimeout(() => {
           adminSearchWrapper?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 280);
+      }
+    });
+  }
+
+  // Clear All Products Button (Kosongkan Semua Produk agar siap diisi baru)
+  const btnClearProducts = document.getElementById('btnClearAllProducts');
+  if (btnClearProducts) {
+    btnClearProducts.addEventListener('click', async () => {
+      if (store.products.length === 0) {
+        showToast("Katalog produk sudah kosong (0 barang).", "info");
+        return;
+      }
+
+      const confirmed = await showCustomConfirm({
+        title: "Kosongkan Semua Produk?",
+        message: `Apakah Anda yakin ingin menghapus <strong>semua (${store.products.length}) produk</strong>?<br><small style="color: var(--danger); display: inline-block; margin-top: 6px;">Katalog akan di-reset menjadi 0 barang agar Anda dapat memasukkan foto dan data produk asli dari awal.</small>`,
+        confirmText: "Ya, Kosongkan Semua",
+        cancelText: "Batal",
+        type: "danger",
+        icon: "ri-delete-bin-line"
+      });
+
+      if (confirmed) {
+        store.clearAllProducts();
+        renderAdminProductsTable();
+        renderCashierCatalog();
+        showToast("Semua produk berhasil dikosongkan (0 barang)! Silakan tambahkan barang baru.", "success");
       }
     });
   }

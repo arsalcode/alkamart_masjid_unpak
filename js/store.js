@@ -24,16 +24,22 @@ class AlkamartStore {
   }
 
   init() {
-    // 1. Load Products
+    // 1. Load Products (Murni 0 / Kosong agar pengguna dapat input produk asli & foto sendiri)
     const savedProducts = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-    if (savedProducts) {
+    const hasPurged = localStorage.getItem('alkamart_products_clean_zero_v1');
+
+    if (!hasPurged) {
+      this.products = [];
+      this.saveProducts();
+      localStorage.setItem('alkamart_products_clean_zero_v1', 'true');
+    } else if (savedProducts) {
       try {
         this.products = JSON.parse(savedProducts);
       } catch (e) {
-        this.products = [...DEFAULT_PRODUCTS];
+        this.products = [];
       }
     } else {
-      this.products = [...DEFAULT_PRODUCTS];
+      this.products = [];
     }
 
     // Pastikan setiap produk memiliki costPrice (Harga Beli / Modal)
@@ -170,6 +176,14 @@ class AlkamartStore {
     this.saveProducts();
     if (this.googleSheetsUrl) {
       this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on deleteProduct:", err));
+    }
+  }
+
+  clearAllProducts() {
+    this.products = [];
+    this.saveProducts();
+    if (this.googleSheetsUrl) {
+      this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on clearAllProducts:", err));
     }
   }
 
@@ -379,8 +393,15 @@ class AlkamartStore {
 
       if (data.status === 'success') {
         if (data.products && Array.isArray(data.products) && data.products.length > 0) {
-          this.products = data.products;
-          this.saveProducts();
+          // Cek apakah data dari Google Sheets hanya produk dummy bawaan (seperti prod_1 s/d prod_10)
+          const isOnlyDefaultDummy = data.products.every(p => p.id && /^prod_\d+$/.test(p.id));
+          if (isOnlyDefaultDummy && this.products.length === 0) {
+            // Jangan tarik produk dummy ke web; sinkronkan balik ke cloud agar tab Produk di spreadsheet juga bersih
+            this.syncAllToGoogleSheets().catch(e => console.warn("Auto-clear cloud products:", e));
+          } else {
+            this.products = data.products;
+            this.saveProducts();
+          }
         } else if (this.products && this.products.length > 0) {
           this.syncAllToGoogleSheets().catch(e => console.warn("Auto-populate error:", e));
         }
