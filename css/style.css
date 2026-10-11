@@ -1115,11 +1115,13 @@ body {
 }
 
 .btn-checkout:disabled {
-  background: #E2E8F0;
-  color: #94A3B8;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  transform: none !important;
 }
 
 /* ================= ADMIN VIEW ================= */

@@ -829,15 +829,16 @@ function calculateChange() {
   // Jika metode pembayaran Tunai (Cash)
   const rawVal = inputPaid.value.replace(/[^0-9]/g, '');
   const paid = Number(rawVal || 0);
-  const change = paid - totalPrice;
 
-  // Jika belum diisi, kita biarkan tombol aktif jika kasir ingin bayar uang pas langsung
-  if (rawVal === '') {
+  // Wajib masukkan nominal uang tunai terlebih dahulu
+  if (!rawVal || paid === 0) {
     changeEl.textContent = 'Rp 0 (Masukkan uang tunai)';
     changeEl.style.color = 'var(--text-muted)';
-    btnCheckout.disabled = false; // Memungkinkan klik bayar langsung (otomatis uang pas)
+    btnCheckout.disabled = true;
     return;
   }
+
+  const change = paid - totalPrice;
 
   if (paid >= totalPrice) {
     changeEl.textContent = formatRp(change);
@@ -869,14 +870,15 @@ function processCheckout() {
     const rawDigits = inputPaid.value.replace(/[^0-9]/g, '');
     paid = Number(rawDigits || 0);
 
-    // Jika kasir langsung klik bayar tanpa ketik, otomatis dianggap uang pas
-    if (paid === 0 || isNaN(paid)) {
-      paid = totalPrice;
-      inputPaid.value = totalPrice > 0 ? totalPrice.toLocaleString('id-ID') : '0';
+    if (!rawDigits || paid <= 0) {
+      showToast("Silakan masukkan nominal uang tunai terlebih dahulu!", "warning");
+      inputPaid.focus();
+      return;
     }
 
     if (paid < totalPrice) {
-      showToast("Nominal pembayaran masih kurang dari total belanja!", "error");
+      showToast(`Uang pembayaran kurang ${formatRp(totalPrice - paid)}!`, "error");
+      inputPaid.focus();
       return;
     }
     change = paid - totalPrice;
