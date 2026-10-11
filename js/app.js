@@ -551,7 +551,12 @@ function verifyAdminPassword() {
   }
 }
 
+let isSwitchingRole = false;
 function switchRole() {
+  if (isSwitchingRole) return;
+  isSwitchingRole = true;
+  setTimeout(() => { isSwitchingRole = false; }, 350);
+
   if (store.activeRole === 'cashier') {
     openAdminAuthModal();
   } else {
@@ -1564,7 +1569,10 @@ async function handleWithdrawalSubmit(e) {
 // ==========================================
 function setupEventListeners() {
   // Switch Role
-  document.getElementById('btnSwitchRole').addEventListener('click', switchRole);
+  const btnSwitchRole = document.getElementById('btnSwitchRole');
+  if (btnSwitchRole) {
+    btnSwitchRole.onclick = switchRole;
+  }
 
   // Status Badge Click (Manual Cloud Refresh)
   const syncBadge = document.getElementById('syncStatusBadge');
