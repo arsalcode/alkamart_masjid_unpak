@@ -11,7 +11,7 @@ const STORAGE_KEYS = {
   ROLE: 'alkamart_active_role_v5'
 };
 
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxm0XvmvA0MARv1Ev-1FycEwIfYnu9FmwRQm4-IkQuI3aIpldGxFzxdGWKWwV9LFbY/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxPijXLULdUjyP7E1r9ThXtYDsrO91T8gDrJ-46WWPcZRM7Uzg8yP4Ea8IQKFnulgOoYg/exec';
 
 class AlkamartStore {
   constructor() {
