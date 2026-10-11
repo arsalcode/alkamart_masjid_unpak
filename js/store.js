@@ -247,76 +247,81 @@ class AlkamartStore {
     }
   }
 
+  // --- Helper O(1) HPP Calculator ---
+  _calculateSalesHpp(salesList) {
+    const productMap = new Map(this.products.map(p => [p.id, p.costPrice]));
+    let totalHpp = 0;
+    for (let i = 0; i < salesList.length; i++) {
+      const items = salesList[i].items || [];
+      for (let j = 0; j < items.length; j++) {
+        const item = items[j];
+        let cPrice = item.costPrice;
+        if (cPrice === undefined || cPrice === null) {
+          const cachedPrice = productMap.get(item.productId);
+          cPrice = cachedPrice !== undefined ? cachedPrice : Math.round(Number(item.price || 0) * 0.8);
+        }
+        totalHpp += Number(cPrice) * Number(item.quantity || 1);
+      }
+    }
+    return totalHpp;
+  }
+
   // --- Ringkasan Keuangan & Saldo (Financial Analytics) ---
   getFinancialSummary() {
-    // 1. Total Penjualan Cash & QRIS
-    const cashSalesAmount = this.sales
-      .filter(s => (s.paymentMethod || 'cash').toLowerCase() !== 'qris')
-      .reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+    let cashSalesAmount = 0;
+    let qrisSalesAmount = 0;
 
-    const qrisSalesAmount = this.sales
-      .filter(s => (s.paymentMethod || '').toLowerCase() === 'qris')
-      .reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
-
+    // Single-pass sales aggregation
+    for (let i = 0; i < this.sales.length; i++) {
+      const s = this.sales[i];
+      const amt = Number(s.totalAmount || 0);
+      if ((s.paymentMethod || 'cash').toLowerCase() === 'qris') {
+        qrisSalesAmount += amt;
+      } else {
+        cashSalesAmount += amt;
+      }
+    }
     const totalSalesAmount = cashSalesAmount + qrisSalesAmount;
 
-    // 2. Tarik Uang (Pengeluaran)
-    const cashWithdrawn = this.withdrawals
-      .filter(w => (w.source || 'cash').toLowerCase() !== 'qris')
-      .reduce((sum, w) => sum + Number(w.amount || 0), 0);
-
-    const qrisWithdrawn = this.withdrawals
-      .filter(w => (w.source || '').toLowerCase() === 'qris')
-      .reduce((sum, w) => sum + Number(w.amount || 0), 0);
-
+    // Single-pass withdrawals aggregation
+    let cashWithdrawn = 0;
+    let qrisWithdrawn = 0;
+    for (let i = 0; i < this.withdrawals.length; i++) {
+      const w = this.withdrawals[i];
+      const amt = Number(w.amount || 0);
+      if ((w.source || 'cash').toLowerCase() === 'qris') {
+        qrisWithdrawn += amt;
+      } else {
+        cashWithdrawn += amt;
+      }
+    }
     const totalWithdrawn = cashWithdrawn + qrisWithdrawn;
 
-    // 3. Saldo Kas Riil
+    // Saldo Kas Riil
     const saldoCash = cashSalesAmount - cashWithdrawn;
     const saldoQris = qrisSalesAmount - qrisWithdrawn;
     const totalSaldo = totalSalesAmount - totalWithdrawn;
 
-    // 4. Perhitungan Mingguan (7 Hari Terakhir)
+    // Perhitungan Mingguan (7 Hari Terakhir)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
     const weeklySales = this.sales.filter(s => new Date(s.date) >= sevenDaysAgo);
     const weeklyGrossRevenue = weeklySales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
-
-    let weeklyHpp = 0;
-    weeklySales.forEach(s => {
-      (s.items || []).forEach(item => {
-        let cPrice = item.costPrice;
-        if (cPrice === undefined || cPrice === null) {
-          const prod = this.products.find(p => p.id === item.productId);
-          cPrice = prod ? prod.costPrice : Math.round(Number(item.price || 0) * 0.8);
-        }
-        weeklyHpp += (Number(cPrice) * Number(item.quantity || 1));
-      });
-    });
-
+    const weeklyHpp = this._calculateSalesHpp(weeklySales);
     const weeklyNetProfit = weeklyGrossRevenue - weeklyHpp;
 
-    // 5. Total HPP & Laba Bersih Keseluruhan
-    let totalHpp = 0;
-    this.sales.forEach(s => {
-      (s.items || []).forEach(item => {
-        let cPrice = item.costPrice;
-        if (cPrice === undefined || cPrice === null) {
-          const prod = this.products.find(p => p.id === item.productId);
-          cPrice = prod ? prod.costPrice : Math.round(Number(item.price || 0) * 0.8);
-        }
-        totalHpp += (Number(cPrice) * Number(item.quantity || 1));
-      });
-    });
-
+    // Total HPP & Laba Bersih Keseluruhan
+    const totalHpp = this._calculateSalesHpp(this.sales);
     const totalNetProfit = totalSalesAmount - totalHpp;
 
-    // 6. Nilai Total Aset Inventaris (Stok x Harga Beli)
-    const totalInventoryValue = this.products.reduce((sum, p) => {
-      return sum + (Number(p.costPrice || 0) * Number(p.stock || 0));
-    }, 0);
+    // Nilai Total Aset Inventaris (Stok x Harga Beli)
+    let totalInventoryValue = 0;
+    for (let i = 0; i < this.products.length; i++) {
+      const p = this.products[i];
+      totalInventoryValue += (Number(p.costPrice || 0) * Number(p.stock || 0));
+    }
 
     return {
       cashSalesAmount,

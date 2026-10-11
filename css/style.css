@@ -2278,27 +2278,6 @@ body:has(#adminView.active) #btnToggleCartMobile {
 }
 
 /* ================= KARTU METRIK FINANSIAL & SALDO ================= */
-.report-card,
-.report-card.green {
-  border: 1.5px solid var(--primary);
-}
-
-.report-card .report-icon,
-.report-card.purple .report-icon,
-.report-card.emerald .report-icon,
-.report-card.orange .report-icon,
-.report-card.green .report-icon { 
-  background: var(--primary); 
-}
-
-.report-card .report-icon i,
-.report-card.purple .report-icon i,
-.report-card.emerald .report-icon i,
-.report-card.orange .report-icon i,
-.report-card.green .report-icon i { 
-  color: #ffffff; 
-}
-
 .saldo-breakdown-tags {
   display: flex;
   gap: 8px;
@@ -2306,7 +2285,7 @@ body:has(#adminView.active) #btnToggleCartMobile {
   flex-wrap: wrap;
 }
 
-.tag-cash, .tag-qris {
+.tag-cash, .tag-qris, .badge-pay-cash, .badge-pay-qris {
   font-size: 11px;
   font-weight: 600;
   padding: 3px 8px;
@@ -2316,25 +2295,25 @@ body:has(#adminView.active) #btnToggleCartMobile {
   gap: 4px;
 }
 
-.tag-cash {
+.tag-cash, .badge-pay-cash {
   background: #f0fdf4;
   color: #166534;
   border: 1px solid #bbf7d0;
 }
 
-.tag-cash i,
-.tag-cash strong {
+.tag-cash i, .tag-cash strong,
+.badge-pay-cash i, .badge-pay-cash strong {
   color: #166534;
 }
 
-.tag-qris {
+.tag-qris, .badge-pay-qris {
   background: var(--primary);
   color: #ffffff;
   border: 1px solid var(--primary);
 }
 
-.tag-qris i,
-.tag-qris strong {
+.tag-qris i, .tag-qris strong,
+.badge-pay-qris i, .badge-pay-qris strong {
   color: #ffffff;
 }
 
@@ -2371,38 +2350,6 @@ body:has(#adminView.active) #btnToggleCartMobile {
   font-size: 14px;
   font-weight: 800;
   color: #15803d;
-}
-
-/* ================= BADGE METODE PEMBAYARAN DI TABEL ================= */
-.badge-pay-method {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: 6px;
-  text-transform: uppercase;
-}
-
-.badge-pay-cash {
-  background: #f0fdf4;
-  color: #166534;
-  border: 1px solid #bbf7d0;
-}
-
-.badge-pay-cash i {
-  color: #166534;
-}
-
-.badge-pay-qris {
-  background: var(--primary);
-  color: #ffffff;
-  border: 1px solid var(--primary);
-}
-
-.badge-pay-qris i {
-  color: #ffffff;
 }
 
 .profit-tag {
