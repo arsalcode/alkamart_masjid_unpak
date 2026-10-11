@@ -79,27 +79,37 @@ class AlkamartStore {
     const savedSales = localStorage.getItem(STORAGE_KEYS.SALES);
     if (savedSales) {
       try {
-        this.sales = JSON.parse(savedSales);
+        this.sales = JSON.parse(savedSales).filter(s => s.id !== 'TRX-1001');
       } catch (e) {
-        this.sales = [...DEFAULT_SALES];
+        this.sales = [];
       }
     } else {
-      this.sales = [...DEFAULT_SALES];
-      this.saveSales();
+      this.sales = [];
     }
 
-    // Normalisasi data sales (paymentMethod & item costPrice)
+    // Normalisasi data sales (buang dummy TRX-1001, pastikan costPrice & totalHpp selalu terhitung)
+    this.sales = this.sales.filter(s => s.id !== 'TRX-1001');
     this.sales.forEach(s => {
       if (!s.paymentMethod) s.paymentMethod = 'cash';
-      if (s.items && Array.isArray(s.items)) {
+      if (!s.items || !Array.isArray(s.items)) s.items = [];
+
+      let saleHpp = 0;
+      if (s.items.length > 0) {
         s.items.forEach(it => {
-          if (it.costPrice === undefined || it.costPrice === null) {
-            const prod = this.products.find(p => p.id === it.productId);
-            it.costPrice = prod ? prod.costPrice : Math.round(Number(it.price || 0) * 0.8);
+          if (it.costPrice === undefined || it.costPrice === null || Number(it.costPrice) <= 0) {
+            const prod = this.products.find(p => p.id === it.productId || (p.name && it.name && p.name.toLowerCase() === it.name.toLowerCase()));
+            it.costPrice = (prod && Number(prod.costPrice || 0) > 0) ? Number(prod.costPrice) : Math.round(Number(it.price || 0) * 0.8);
           }
+          saleHpp += Number(it.costPrice) * Number(it.quantity || 1);
         });
+      } else {
+        // Fallback wajar 80% dari total belanja jika rincian items tidak tersedia
+        saleHpp = Math.round(Number(s.totalAmount || 0) * 0.8);
       }
+      s.totalHpp = saleHpp;
+      s.netProfit = Number(s.totalAmount || 0) - saleHpp;
     });
+    this.saveSales();
 
     // 3. Load Withdrawals (Tarik Uang / Kas Keluar)
     const savedWithdrawals = localStorage.getItem(STORAGE_KEYS.WITHDRAWALS);
@@ -264,18 +274,49 @@ class AlkamartStore {
 
   // --- Helper O(1) HPP Calculator ---
   _calculateSalesHpp(salesList) {
-    const productMap = new Map(this.products.map(p => [p.id, p.costPrice]));
+    const productMap = new Map(this.products.map(p => [p.id, Number(p.costPrice || 0)]));
+    const productNameMap = new Map(this.products.map(p => [(p.name || '').toLowerCase(), Number(p.costPrice || 0)]));
     let totalHpp = 0;
+
     for (let i = 0; i < salesList.length; i++) {
-      const items = salesList[i].items || [];
-      for (let j = 0; j < items.length; j++) {
-        const item = items[j];
-        let cPrice = item.costPrice;
-        if (cPrice === undefined || cPrice === null) {
-          const cachedPrice = productMap.get(item.productId);
-          cPrice = cachedPrice !== undefined ? cachedPrice : Math.round(Number(item.price || 0) * 0.8);
+      const s = salesList[i];
+      // Jika transaksi sudah memiliki totalHpp valid > 0
+      if (s.totalHpp !== undefined && s.totalHpp !== null && Number(s.totalHpp) > 0) {
+        totalHpp += Number(s.totalHpp);
+        continue;
+      }
+
+      const items = s.items || [];
+      if (items.length > 0) {
+        let saleHppSum = 0;
+        for (let j = 0; j < items.length; j++) {
+          const item = items[j];
+          let cPrice = item.costPrice;
+          if (cPrice === undefined || cPrice === null || Number(cPrice) <= 0) {
+            let cached = productMap.get(item.productId);
+            if (!cached && item.name) {
+              cached = productNameMap.get(item.name.toLowerCase());
+            }
+            cPrice = (cached && cached > 0) ? cached : Math.round(Number(item.price || 0) * 0.8);
+          }
+          saleHppSum += Number(cPrice) * Number(item.quantity || 1);
         }
-        totalHpp += Number(cPrice) * Number(item.quantity || 1);
+        totalHpp += saleHppSum;
+      } else {
+        // Fallback: Jika rincian items tidak ada (misal data ditarik dari Google Sheets)
+        let estimatedHpp = 0;
+        if (s.itemsSummary) {
+          this.products.forEach(p => {
+            if (p.name && s.itemsSummary.toLowerCase().includes(p.name.toLowerCase())) {
+              const prodCost = Number(p.costPrice || 0) > 0 ? Number(p.costPrice) : Math.round(Number(p.price || 0) * 0.8);
+              estimatedHpp += prodCost;
+            }
+          });
+        }
+        if (estimatedHpp <= 0) {
+          estimatedHpp = Math.round(Number(s.totalAmount || 0) * 0.8);
+        }
+        totalHpp += estimatedHpp;
       }
     }
     return totalHpp;
@@ -406,8 +447,24 @@ class AlkamartStore {
           this.syncAllToGoogleSheets().catch(e => console.warn("Auto-populate error:", e));
         }
 
-        if (data.sales && Array.isArray(data.sales) && data.sales.length > 0) {
-          this.sales = data.sales;
+        if (data.sales && Array.isArray(data.sales)) {
+          // Buang transaksi dummy bawaan TRX-1001 jika masih ada di cloud
+          const realSales = data.sales.filter(s => s.id !== 'TRX-1001');
+
+          // Gabungkan dengan items lokal jika ada agar items, costPrice, dan totalHpp tidak hilang
+          this.sales = realSales.map(cloudSale => {
+            const local = this.sales.find(s => s.id === cloudSale.id);
+            if (local) {
+              return {
+                ...cloudSale,
+                items: (local.items && local.items.length > 0) ? local.items : (cloudSale.items || []),
+                totalHpp: local.totalHpp !== undefined ? local.totalHpp : cloudSale.totalHpp,
+                netProfit: local.netProfit !== undefined ? local.netProfit : cloudSale.netProfit,
+                itemsSummary: local.itemsSummary || cloudSale.itemsSummary
+              };
+            }
+            return cloudSale;
+          });
           this.saveSales();
         }
 

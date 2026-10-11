@@ -899,16 +899,24 @@ function processCheckout() {
 
   // Rekam costPrice pada setiap item untuk keakuratan laba historis
   const saleItems = cart.map(item => {
-    const prod = store.products.find(p => p.id === item.productId);
-    const itemCost = (item.costPrice !== undefined && item.costPrice !== null)
-      ? Number(item.costPrice)
-      : (prod && prod.costPrice !== undefined ? Number(prod.costPrice) : Math.round(Number(item.price || 0) * 0.8));
+    const prod = store.products.find(p => p.id === item.productId || (p.name && item.name && p.name.toLowerCase() === item.name.toLowerCase()));
+    let itemCost = 0;
+    if (item.costPrice !== undefined && item.costPrice !== null && Number(item.costPrice) > 0) {
+      itemCost = Number(item.costPrice);
+    } else if (prod && prod.costPrice !== undefined && Number(prod.costPrice) > 0) {
+      itemCost = Number(prod.costPrice);
+    } else {
+      itemCost = Math.round(Number(item.price || 0) * 0.8);
+    }
 
     return {
       ...item,
       costPrice: itemCost
     };
   });
+
+  const totalCostHpp = saleItems.reduce((sum, it) => sum + (Number(it.costPrice || 0) * Number(it.quantity || 1)), 0);
+  const netProfit = totalPrice - totalCostHpp;
 
   const sale = {
     id: trxId,
@@ -922,7 +930,9 @@ function processCheckout() {
     paid: paid,
     change: change,
     items: saleItems,
-    itemsSummary: saleItems.map(i => `${i.name} (${i.quantity})`).join(', ')
+    itemsSummary: saleItems.map(i => `${i.name} (${i.quantity}x @Rp${Number(i.price).toLocaleString('id-ID')})`).join(', '),
+    totalHpp: totalCostHpp,
+    netProfit: netProfit
   };
 
   // Simpan transaksi & kurangi stok
@@ -1533,6 +1543,26 @@ function saveManualSale() {
 
   const trxId = 'TRX-M-' + Date.now().toString().slice(-6);
 
+  const saleItems = manualSaleItems.map(item => {
+    const prod = store.products.find(p => p.id === item.productId || (p.name && item.name && p.name.toLowerCase() === item.name.toLowerCase()));
+    let itemCost = 0;
+    if (item.costPrice !== undefined && item.costPrice !== null && Number(item.costPrice) > 0) {
+      itemCost = Number(item.costPrice);
+    } else if (prod && prod.costPrice !== undefined && Number(prod.costPrice) > 0) {
+      itemCost = Number(prod.costPrice);
+    } else {
+      itemCost = Math.round(Number(item.price || 0) * 0.8);
+    }
+
+    return {
+      ...item,
+      costPrice: itemCost
+    };
+  });
+
+  const totalCostHpp = saleItems.reduce((sum, it) => sum + (Number(it.costPrice || 0) * Number(it.quantity || 1)), 0);
+  const netProfit = totalPrice - totalCostHpp;
+
   const sale = {
     id: trxId,
     date: saleDate,
@@ -1544,8 +1574,10 @@ function saveManualSale() {
     total: totalPrice,
     paid: totalPrice,
     change: 0,
-    items: [...manualSaleItems],
-    itemsSummary: manualSaleItems.map(i => `${i.name} (${i.quantity})`).join(', ') + (notes ? ` [${notes}]` : '')
+    items: saleItems,
+    itemsSummary: saleItems.map(i => `${i.name} (${i.quantity}x @Rp${Number(i.price).toLocaleString('id-ID')})`).join(', ') + (notes ? ` [${notes}]` : ''),
+    totalHpp: totalCostHpp,
+    netProfit: netProfit
   };
 
   store.recordSale(sale);
@@ -2035,10 +2067,10 @@ function setupEventListeners() {
     const id = document.getElementById('formProductId').value || ('prod_' + Date.now());
     const name = document.getElementById('formProductName').value.trim();
     const category = document.getElementById('formProductCategory').value;
-    const rawCost = document.getElementById('formProductCostPrice').value.replace(/[^0-9]/g, '');
-    const costPrice = Number(rawCost || 0);
     const rawPrice = document.getElementById('formProductPrice').value.replace(/[^0-9]/g, '');
     const price = Number(rawPrice || 0);
+    const rawCost = document.getElementById('formProductCostPrice').value.replace(/[^0-9]/g, '');
+    const costPrice = (rawCost && Number(rawCost) > 0) ? Number(rawCost) : Math.round(price * 0.8);
     const stock = Number(document.getElementById('formProductStock').value);
     const imageUrl = document.getElementById('formProductImageUrl').value.trim();
 
