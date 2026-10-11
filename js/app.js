@@ -1540,19 +1540,23 @@ function selectWithdrawalSource(source) {
   const hiddenInput = document.getElementById('formWithdrawalSource');
   if (hiddenInput) hiddenInput.value = source;
 
-  const btnCash = document.querySelector('.btn-source-pill.source-cash');
-  const btnQris = document.querySelector('.btn-source-pill.source-qris');
+  const selector = document.getElementById('withdrawalSourceSelector');
+  if (selector) {
+    const btnCash = selector.querySelector('.source-cash');
+    const btnQris = selector.querySelector('.source-qris');
 
-  if (btnCash && btnQris) {
-    if (source === 'cash') {
-      btnCash.classList.add('active');
-      btnQris.classList.remove('active');
-    } else {
-      btnQris.classList.add('active');
-      btnCash.classList.remove('active');
+    if (btnCash && btnQris) {
+      if (source === 'cash') {
+        btnCash.classList.add('active');
+        btnQris.classList.remove('active');
+      } else {
+        btnQris.classList.add('active');
+        btnCash.classList.remove('active');
+      }
     }
   }
 }
+window.selectWithdrawalSource = selectWithdrawalSource;
 
 function checkWithdrawalFormValidity() {
   const amountInput = document.getElementById('formWithdrawalAmount');
@@ -1762,6 +1766,30 @@ function setupEventListeners() {
       if (paymentCashBox) paymentCashBox.style.display = 'none';
       if (qrisNoticeBox) qrisNoticeBox.style.display = 'block';
       calculateChange();
+    });
+  }
+
+  // Pill Selector Sumber Kas Tarik Uang
+  const withdrawSelector = document.getElementById('withdrawalSourceSelector');
+  if (withdrawSelector) {
+    withdrawSelector.querySelectorAll('.btn-source-pill').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const src = btn.getAttribute('data-source') || (btn.classList.contains('source-qris') ? 'qris' : 'cash');
+        selectWithdrawalSource(src);
+      });
+    });
+  }
+
+  // Pill Selector Metode Bayar Penjualan Manual
+  const manualPaySelector = document.getElementById('manualSalePayMethodSelector');
+  if (manualPaySelector) {
+    manualPaySelector.querySelectorAll('.btn-source-pill').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        const mth = btn.getAttribute('data-method') || (btn.classList.contains('source-qris') ? 'qris' : 'cash');
+        selectManualSalePayMethod(mth);
+      });
     });
   }
 
