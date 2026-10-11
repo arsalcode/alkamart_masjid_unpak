@@ -414,7 +414,37 @@
       </div>
     </section>
 
-  </main>
+  <!-- ================= MODAL: LOGIN ADMIN ================= -->
+  <div class="modal-overlay" id="adminAuthModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h3 class="modal-title" style="display: flex; align-items: center; gap: 8px;">
+            <i class="ri-lock-password-line" style="color: var(--primary);"></i> Login Mode Admin
+          </h3>
+        </div>
+        <button class="modal-close" onclick="closeAdminAuthModal()">&times;</button>
+      </div>
+      <form id="adminAuthForm" onsubmit="event.preventDefault(); verifyAdminPassword();">
+        <div class="modal-body">
+          <p class="text-muted" style="font-size: 13px; margin-bottom: 14px;">
+            Masukkan password admin untuk membuka halaman rekap laporan & manajemen barang.
+          </p>
+          <div class="form-group">
+            <label for="inputAdminPassword"><i class="ri-key-2-line"></i> Password Admin</label>
+            <input type="password" id="inputAdminPassword" class="form-input" placeholder="Masukkan password..." required autocomplete="off">
+            <p class="form-hint text-danger" id="adminAuthError" style="display: none; margin-top: 6px; font-size: 12px; color: #dc2626;">
+              <i class="ri-error-warning-line"></i> Password salah! Akses ditolak.
+            </p>
+          </div>
+        </div>
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px; padding-top: 10px;">
+          <button type="button" class="btn btn-outline" onclick="closeAdminAuthModal()">Batal</button>
+          <button type="submit" class="btn btn-primary"><i class="ri-login-box-line"></i> Masuk Admin</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- ================= MODAL: STRUK / NOTA TRANSAKSI ================= -->
   <div class="modal-overlay" id="receiptModal">

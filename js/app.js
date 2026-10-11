@@ -509,14 +509,52 @@ function initRoleView() {
   }
 }
 
-function switchRole() {
-  const newRole = store.activeRole === 'cashier' ? 'admin' : 'cashier';
-  store.setRole(newRole);
-  initRoleView();
-  if (newRole === 'admin') {
+function openAdminAuthModal() {
+  const modal = document.getElementById('adminAuthModal');
+  const input = document.getElementById('inputAdminPassword');
+  const err = document.getElementById('adminAuthError');
+  if (modal) {
+    if (input) input.value = '';
+    if (err) err.style.display = 'none';
+    modal.classList.add('open');
+    setTimeout(() => { if (input) input.focus(); }, 150);
+  }
+}
+
+function closeAdminAuthModal() {
+  const modal = document.getElementById('adminAuthModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function verifyAdminPassword() {
+  const input = document.getElementById('inputAdminPassword');
+  const err = document.getElementById('adminAuthError');
+  const password = input ? input.value : '';
+
+  if (password === 'Update') {
+    closeAdminAuthModal();
+    store.setRole('admin');
+    initRoleView();
     renderAdminView();
+    showToast("Login Admin Berhasil! Selamat datang di Mode Admin.", "success");
   } else {
+    if (err) err.style.display = 'block';
+    showToast("Password Admin Salah! Akses ditolak.", "error");
+    if (input) {
+      input.value = '';
+      input.focus();
+    }
+  }
+}
+
+function switchRole() {
+  if (store.activeRole === 'cashier') {
+    openAdminAuthModal();
+  } else {
+    store.setRole('cashier');
+    initRoleView();
     renderCashierCatalog();
+    showToast("Berhasil beralih ke Mode Kasir.", "info");
   }
 }
 

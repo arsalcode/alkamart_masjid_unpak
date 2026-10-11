@@ -116,7 +116,8 @@ class AlkamartStore {
     } else {
       this.googleSheetsUrl = (savedUrl && savedUrl.trim()) ? savedUrl.trim() : DEFAULT_GSHEET_URL;
     }
-    this.activeRole = localStorage.getItem(STORAGE_KEYS.ROLE) || 'cashier';
+    this.activeRole = 'cashier';
+    localStorage.setItem(STORAGE_KEYS.ROLE, 'cashier');
   }
 
   saveProducts() {
