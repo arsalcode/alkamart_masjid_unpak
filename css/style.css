@@ -1764,13 +1764,21 @@ table th,
   border-radius: 12px;
   width: 100%;
   max-width: 540px;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
   border: 1px solid #E2E8F0;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  padding: 32px;
+  padding: 24px 28px;
   position: relative;
   animation: modalFadeIn 0.2s ease-out;
+  scrollbar-width: none; /* Sembunyikan scrollbar Firefox */
+  -ms-overflow-style: none; /* Sembunyikan scrollbar IE/Edge */
+}
+
+.modal-dialog::-webkit-scrollbar {
+  display: none; /* Sembunyikan scrollbar Chrome, Safari, Edge */
+  width: 0;
+  height: 0;
 }
 
 .modal-dialog.modal-sm {
@@ -2560,8 +2568,7 @@ body:has(#adminView.active) #btnToggleCartMobile {
   background: #f0fdf4;
   color: #15803d;
   border-color: #22c55e;
-  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.25);
-  transform: translateY(-1px);
+  box-shadow: none;
 }
 
 /* Tampilan QRIS (Mirip Gambar 2) */
@@ -2591,13 +2598,11 @@ body:has(#adminView.active) #btnToggleCartMobile {
   background: var(--primary);
   color: #ffffff;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(0, 107, 67, 0.28);
-  transform: translateY(-1px);
+  box-shadow: none;
 }
 
 .btn-source-pill:hover:not(.active) {
   opacity: 0.8;
-  transform: translateY(-1px);
 }
 
 /* ================= PREVIEW SISA SALDO DI MODAL TARIK UANG (SENADA GAMBAR 2) ================= */
@@ -2699,4 +2704,13 @@ body:has(#adminView.active) #btnToggleCartMobile {
 #btnSubmitWithdrawal:not(:disabled):not(.btn-disabled):hover {
   background: var(--primary-dark) !important;
   transform: translateY(-1px);
+}
+
+/* Penyesuaian Spasi Khusus Modal Tarik Kas */
+#withdrawalModal .form-group {
+  margin-bottom: 14px;
+}
+
+#withdrawalModal .modal-footer {
+  margin-top: 18px;
 }
