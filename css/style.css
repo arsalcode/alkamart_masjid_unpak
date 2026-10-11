@@ -2599,3 +2599,78 @@ body:has(#adminView.active) #btnToggleCartMobile {
   opacity: 0.8;
   transform: translateY(-1px);
 }
+
+/* ================= PREVIEW SISA SALDO DI MODAL TARIK UANG (SENADA GAMBAR 2) ================= */
+.withdrawal-saldo-info {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.withdrawal-saldo-card {
+  flex: 1;
+  padding: 12px 14px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  transition: transform 0.2s ease;
+}
+
+.withdrawal-saldo-card .saldo-card-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.withdrawal-saldo-card .saldo-card-header i {
+  font-size: 15px;
+}
+
+.withdrawal-saldo-card .saldo-card-amount {
+  font-size: 16px;
+  font-weight: 800;
+  margin-top: 6px;
+  display: block;
+  letter-spacing: -0.2px;
+}
+
+/* Kartu Tunai: Senada Pill Tunai Gambar 2 */
+.withdrawal-saldo-card.saldo-cash-card {
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+}
+
+.withdrawal-saldo-card.saldo-cash-card .saldo-card-header {
+  color: #166534;
+}
+
+.withdrawal-saldo-card.saldo-cash-card .saldo-card-header i {
+  color: #166534;
+}
+
+.withdrawal-saldo-card.saldo-cash-card .saldo-card-amount {
+  color: #15803d;
+}
+
+/* Kartu QRIS: Senada Pill QRIS Gambar 2 (Solid Alkamart Primary Green) */
+.withdrawal-saldo-card.saldo-qris-card {
+  background: var(--primary);
+  border: 1.5px solid var(--primary);
+  box-shadow: 0 2px 6px rgba(0, 107, 67, 0.18);
+}
+
+.withdrawal-saldo-card.saldo-qris-card .saldo-card-header {
+  color: #ffffff;
+}
+
+.withdrawal-saldo-card.saldo-qris-card .saldo-card-header i {
+  color: #ffffff;
+}
+
+.withdrawal-saldo-card.saldo-qris-card .saldo-card-amount {
+  color: #ffffff;
+}

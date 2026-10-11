@@ -747,15 +747,21 @@
 
       <form id="withdrawalForm">
         <div class="modal-body" style="padding-top: 12px;">
-          <!-- Saldo Saat Ini Preview -->
-          <div class="withdrawal-saldo-info" style="display: flex; gap: 12px; margin-bottom: 16px;">
-            <div class="mini-card" style="flex: 1; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
-              <span style="font-size: 11px; color: #166534; font-weight: 600; display: block;">Sisa Saldo Tunai:</span>
-              <strong style="display: block; font-size: 15px; color: #15803d; margin-top: 2px;" id="withdrawInfoSaldoCash">Rp 0</strong>
+          <!-- Saldo Saat Ini Preview (Senada Gambar 2) -->
+          <div class="withdrawal-saldo-info">
+            <div class="withdrawal-saldo-card saldo-cash-card">
+              <div class="saldo-card-header">
+                <i class="ri-money-dollar-circle-fill"></i>
+                <span>Sisa Saldo Tunai:</span>
+              </div>
+              <strong class="saldo-card-amount" id="withdrawInfoSaldoCash">Rp 0</strong>
             </div>
-            <div class="mini-card" style="flex: 1; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;">
-              <span style="font-size: 11px; color: #1e40af; font-weight: 600; display: block;">Sisa Saldo QRIS:</span>
-              <strong style="display: block; font-size: 15px; color: #2563eb; margin-top: 2px;" id="withdrawInfoSaldoQris">Rp 0</strong>
+            <div class="withdrawal-saldo-card saldo-qris-card">
+              <div class="saldo-card-header">
+                <i class="ri-qr-code-fill"></i>
+                <span>Sisa Saldo QRIS:</span>
+              </div>
+              <strong class="saldo-card-amount" id="withdrawInfoSaldoQris">Rp 0</strong>
             </div>
           </div>
 
