@@ -377,19 +377,36 @@
       <!-- Tab Content 4: Pengaturan & Google Sheets -->
       <div class="admin-tab-content" id="tabSettings">
         <div class="settings-card">
-          <h3>📊 Hubungkan ke Google Sheets</h3>
-          <!-- <p class="settings-desc">
-            Hubungkan web Alkamart langsung ke Google Spreadsheet milik Anda. Anda bisa memantau penjualan dari aplikasi Google Sheets di HP kapan saja tanpa pusing limit kuota Firebase.
-          </p> -->
+          <div class="settings-header">
+            <div class="settings-header-icon">
+              <i class="ri-google-fill"></i>
+            </div>
+            <div class="settings-header-title">
+              <div class="settings-title-row">
+                <h3>Integrasi Google Sheets Cloud</h3>
+                <span class="status-tag in-stock" id="gsheetConnectionStatus"><i class="ri-checkbox-circle-fill"></i> Terhubung</span>
+              </div>
+             
+            </div>
+          </div>
 
           <div class="form-group">
+            <label for="inputGoogleAppsScriptUrl">
+              <i class="ri-link-m"></i> URL Web App Google Apps Script
+            </label>
             <input type="url" id="inputGoogleAppsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="form-input" value="https://script.google.com/macros/s/AKfycbxm0XvmvA0MARv1Ev-1FycEwIfYnu9FmwRQm4-IkQuI3aIpldGxFzxdGWKWwV9LFbY/exec">
           </div>
 
-          <div class="settings-actions">
-            <button class="btn btn-primary" id="btnSaveGoogleSheetsUrl">Simpan Pengaturan</button>
-            <button class="btn btn-outline" id="btnSyncToGoogleSheets">⬆️ Kirim Data ke Google Sheets</button>
-            <button class="btn btn-outline" id="btnFetchFromGoogleSheets">🔄 Tarik Data dari Google Sheets</button>
+          <div class="settings-actions-bar">
+            <button class="btn btn-primary" id="btnSaveGoogleSheetsUrl">
+              <i class="ri-save-3-line"></i> Simpan URL
+            </button>
+            <button class="btn btn-outline" id="btnSyncToGoogleSheets">
+              <i class="ri-upload-cloud-2-line"></i> Kirim Data ke Cloud
+            </button>
+            <button class="btn btn-outline" id="btnFetchFromGoogleSheets">
+              <i class="ri-download-cloud-2-line"></i> Tarik Data dari Cloud
+            </button>
           </div>
         </div>
 
