@@ -764,30 +764,24 @@
             <input type="text" inputmode="numeric" id="formWithdrawalAmount" required placeholder="Contoh: 100.000" class="form-input" style="font-size: 18px; font-weight: 700;">
           </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label for="formWithdrawalSource">Diambil dari Saldo *</label>
-              <select id="formWithdrawalSource" class="form-input" required>
-                <option value="cash">💵 Saldo Tunai (Cash di laci)</option>
-                <option value="qris">📱 Saldo QRIS (Rekening)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="formWithdrawalCategory">Kategori Keperluan *</label>
-              <select id="formWithdrawalCategory" class="form-input" required>
-                <option value="Kulakan / Belanja Stok">🛒 Kulakan / Belanja Stok</option>
-                <option value="Keperluan Pribadi (Prive)">👤 Keperluan Pribadi (Prive)</option>
-                <option value="Gaji Karyawan">👥 Gaji Karyawan</option>
-                <option value="Operasional Warung">⚡ Operasional (Listrik/Air/Plastik)</option>
-                <option value="Lainnya">📌 Lainnya</option>
-              </select>
+          <div class="form-group">
+            <label class="form-label" style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 13px;">Diambil dari Saldo *</label>
+            <input type="hidden" id="formWithdrawalSource" value="cash" required>
+            <div class="withdrawal-source-selector" id="withdrawalSourceSelector">
+              <button type="button" class="btn-source-pill source-cash active" data-source="cash" onclick="selectWithdrawalSource('cash')">
+                <i class="ri-money-dollar-circle-fill"></i>
+                <span>Tunai</span>
+              </button>
+              <button type="button" class="btn-source-pill source-qris" data-source="qris" onclick="selectWithdrawalSource('qris')">
+                <i class="ri-qr-code-fill"></i>
+                <span>QRIS</span>
+              </button>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="formWithdrawalNotes">Keterangan / Digunakan Untuk Apa *</label>
-            <textarea id="formWithdrawalNotes" required rows="2" placeholder="Contoh: Beli gas elpiji 2 tabung & bayar sales beras" class="form-input"></textarea>
+            <label for="formWithdrawalNotes">Keterangan*</label>
+            <textarea id="formWithdrawalNotes" required rows="2" placeholder="Contoh: Untuk Kegiatan PMB" class="form-input"></textarea>
           </div>
 
           <div class="form-group">

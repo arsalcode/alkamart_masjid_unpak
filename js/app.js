@@ -1495,6 +1495,24 @@ function saveManualSale() {
 // ==========================================
 // FITUR: TARIK UANG / KAS KELUAR
 // ==========================================
+function selectWithdrawalSource(source) {
+  const hiddenInput = document.getElementById('formWithdrawalSource');
+  if (hiddenInput) hiddenInput.value = source;
+
+  const btnCash = document.querySelector('.btn-source-pill.source-cash');
+  const btnQris = document.querySelector('.btn-source-pill.source-qris');
+
+  if (btnCash && btnQris) {
+    if (source === 'cash') {
+      btnCash.classList.add('active');
+      btnQris.classList.remove('active');
+    } else {
+      btnQris.classList.add('active');
+      btnCash.classList.remove('active');
+    }
+  }
+}
+
 function openWithdrawalModal() {
   const fin = store.getFinancialSummary();
 
@@ -1505,6 +1523,7 @@ function openWithdrawalModal() {
   if (infoQris) infoQris.textContent = formatRp(fin.saldoQris);
 
   document.getElementById('withdrawalForm').reset();
+  selectWithdrawalSource('cash');
 
   const dtEl = document.getElementById('formWithdrawalDate');
   if (dtEl) {
