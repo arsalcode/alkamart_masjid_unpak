@@ -516,6 +516,7 @@ function openAdminAuthModal() {
   if (modal) {
     if (input) input.value = '';
     if (err) err.style.display = 'none';
+    modal.classList.add('active');
     modal.classList.add('open');
     setTimeout(() => { if (input) input.focus(); }, 150);
   }
@@ -523,7 +524,10 @@ function openAdminAuthModal() {
 
 function closeAdminAuthModal() {
   const modal = document.getElementById('adminAuthModal');
-  if (modal) modal.classList.remove('open');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.classList.remove('open');
+  }
 }
 
 function verifyAdminPassword() {

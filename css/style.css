@@ -1698,7 +1698,8 @@ table th,
   padding: 20px;
 }
 
-.modal-overlay.active {
+.modal-overlay.active,
+.modal-overlay.open {
   display: flex;
 }
 
