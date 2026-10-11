@@ -1,39 +1,46 @@
 /* ===================================================
-   ALKAMART WARUNG - MODERN RESPONSIVE STYLESHEET
-   Warna Tema: Hijau Alkamart (#2E7D32, #4CAF50, #1B5E20)
+   ALKAMART WARUNG - PROFESSIONAL EXPERT DASHBOARD STYLESHEET
+   Warna Tema: Enterprise Emerald & Slate
    =================================================== */
 
 :root {
-  --primary: #02452D;
-  --primary-light: #056B47;
-  --primary-dark: #012E1E;
-  --primary-bg: #EAF4F0;
+  /* Colors - Enterprise Emerald */
+  --primary: #047857; /* Emerald 700 */
+  --primary-light: #10B981; /* Emerald 500 */
+  --primary-dark: #064E3B; /* Emerald 900 */
+  --primary-bg: #ECFDF5; /* Emerald 50 */
   
-  --bg-body: #F7FAF8;
+  /* Background & Surfaces (Pure White) */
+  --bg-body: #FFFFFF; /* Pure White */
   --surface: #FFFFFF;
   
-  --text-dark: #1E293B;
-  --text-muted: #64748B;
-  --text-light: #94A3B8;
+  /* Text */
+  --text-dark: #0F172A; /* Slate 900 */
+  --text-muted: #475569; /* Slate 600 */
+  --text-light: #94A3B8; /* Slate 400 */
   
-  --border: #E2ECE6;
-  --border-light: #F0F6F2;
+  /* Borders */
+  --border: #E2E8F0; /* Slate 200 */
+  --border-light: #F1F5F9; /* Slate 100 */
   
-  --danger: #EF4444;
-  --danger-light: #FEE2E2;
-  --warning: #F59E0B;
-  --warning-light: #FEF3C7;
-  --info: #0284C7;
-  --info-light: #E0F2FE;
+  /* Status Colors */
+  --danger: #DC2626; /* Red 600 */
+  --danger-light: #FEF2F2;
+  --warning: #D97706; /* Amber 600 */
+  --warning-light: #FFFBEB;
+  --info: #0284C7; /* Sky 600 */
+  --info-light: #F0F9FF;
   
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Border Radii - Tighter, Professional */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
   
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-  --shadow-lg: 0 10px 25px rgba(0,0,0,0.12);
+  /* Shadows - Crisper, Less Diffuse */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 * {
@@ -44,12 +51,13 @@
 }
 
 body {
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--bg-body);
   color: var(--text-dark);
   font-size: 14px;
   line-height: 1.5;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ================= TOP NAVIGATION ================= */
@@ -262,6 +270,15 @@ body {
   background: var(--bg-body);
 }
 
+.btn-danger {
+  background: var(--danger);
+  color: white;
+  border: 1px solid var(--danger);
+}
+.btn-danger:hover {
+  background: #B91C1C; /* darker red */
+}
+
 .btn-danger-outline {
   background: transparent;
   color: var(--danger);
@@ -398,7 +415,6 @@ body {
 
 .search-input-wrapper input:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(2, 69, 45, 0.1);
 }
 
 .clear-search-btn {
@@ -1255,7 +1271,7 @@ body {
   display: flex;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .action-buttons-group {
@@ -1282,13 +1298,14 @@ body {
   text-align: left;
 }
 
+table th,
 .custom-table th {
-  background: #F8FAFC;
+  background: #E9FAF3;
   padding: 14px 16px;
   font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  color: #064E3B;
+  border-bottom: 1px solid #c7f0db;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1323,26 +1340,31 @@ body {
 }
 
 .status-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 3px 8px;
-  border-radius: var(--radius-full);
+  border-radius: 6px;
   font-size: 11px;
   font-weight: 600;
 }
 
 .status-tag.in-stock {
-  background: var(--primary-bg);
-  color: var(--primary);
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
 .status-tag.low-stock {
-  background: var(--warning-light);
+  background: #fffbeb;
   color: #B45309;
+  border: 1px solid #fde68a;
 }
 
 .status-tag.out-stock {
-  background: var(--danger-light);
+  background: #fef2f2;
   color: var(--danger);
+  border: 1px solid #fecaca;
 }
 
 /* Reports Cards */
@@ -1354,29 +1376,49 @@ body {
 }
 
 .report-card {
+  position: relative;
   background: var(--surface);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   padding: 20px;
-  border: 1px solid var(--border);
+  min-height: 128px;
+  border: 1.5px solid var(--primary);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
   box-shadow: var(--shadow-sm);
 }
 
 .report-icon {
-  font-size: 32px;
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-md);
+  position: relative;
+  margin-top: -21.5px;
+  margin-left: -21.5px;
+  width: 80px;
+  height: 72px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 55px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--primary);
+  flex-shrink: 0;
+  z-index: 1;
 }
 
-.report-card.green .report-icon { background: var(--primary-bg); }
-.report-card.blue .report-icon { background: var(--info-light); }
-.report-card.orange .report-icon { background: var(--warning-light); }
+.report-icon i {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.report-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 80px;
+}
 
 .report-label {
   font-size: 12px;
@@ -1398,14 +1440,26 @@ body {
 
 /* Restock Grid */
 .alert-info-box {
-  background: var(--info-light);
-  border: 1px solid rgba(2, 132, 199, 0.2);
+  background: var(--danger-light);
+  border: 1px solid rgba(220, 38, 38, 0.2);
   border-radius: var(--radius-md);
   padding: 14px 18px;
   display: flex;
+  align-items: center;
   gap: 12px;
   margin-bottom: 20px;
-  color: #0369A1;
+  color: #B91C1C;
+}
+
+.alert-info-box strong {
+  color: #991B1B;
+}
+
+.alert-info-box .info-icon {
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  color: #DC2626;
 }
 
 .restock-grid {
@@ -1461,21 +1515,119 @@ body {
   display: block;
   font-size: 13px;
   font-weight: 600;
-  margin-bottom: 6px;
+  color: #334155;
+  margin-bottom: 8px;
 }
 
 .form-input {
   width: 100%;
-  height: 42px;
+  height: 44px;
   padding: 0 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border: 1px solid #CBD5E1;
+  background-color: #F8FAFC;
+  border-radius: 8px;
   font-family: inherit;
   font-size: 14px;
+  color: #1E293B;
+  transition: all 0.2s ease;
 }
 .form-input:focus {
+  background-color: #FFFFFF;
   border-color: var(--primary);
   outline: none;
+}
+
+/* Custom Select Dropdown */
+.custom-select-wrapper {
+  position: relative;
+  width: 100%;
+}
+.custom-select-wrapper.open {
+  z-index: 9999;
+}
+.custom-select-trigger {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #CBD5E1;
+  background-color: #F8FAFC;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1E293B;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.custom-select-trigger:focus,
+.custom-select-wrapper.open .custom-select-trigger {
+  background-color: #FFFFFF;
+  border-color: var(--primary);
+}
+.custom-select-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.custom-select-value i {
+  color: #64748B;
+  font-size: 16px;
+}
+.custom-select-trigger > i {
+  pointer-events: none;
+}
+.custom-select-options {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  background: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  border-radius: 8px;
+  margin-top: 4px;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+  list-style: none;
+  padding: 6px 0;
+  z-index: 9999;
+  display: none;
+}
+.custom-select-wrapper.open .custom-select-options {
+  display: block;
+  animation: slideDown 0.15s ease-out;
+}
+.custom-select-options li {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #1E293B;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.15s;
+}
+.custom-select-options li i {
+  color: #64748B;
+  font-size: 16px;
+}
+.custom-select-options li:hover {
+  background: var(--primary);
+  color: white;
+}
+.custom-select-options li:hover i {
+  color: white;
+}
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+#formProductImageUrl {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .form-row {
@@ -1519,19 +1671,20 @@ body {
 
 .modal-dialog {
   background: var(--surface);
-  border-radius: var(--radius-lg);
+  border-radius: 12px;
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  padding: 24px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  padding: 32px;
   position: relative;
   animation: modalFadeIn 0.2s ease-out;
 }
 
 .modal-dialog.modal-sm {
-  max-width: 380px;
+  max-width: 400px;
 }
 
 @keyframes modalFadeIn {
@@ -1547,8 +1700,9 @@ body {
 }
 
 .modal-header h3 {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
 }
 
 .btn-close-modal {
@@ -1691,14 +1845,17 @@ body {
 .photo-preview-box {
   width: 90px;
   height: 90px;
-  border-radius: var(--radius-md);
-  border: 2px dashed var(--border);
+  border-radius: 12px;
+  border: 2px dashed #CBD5E1;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #F8FAFC;
   overflow: hidden;
   flex-shrink: 0;
+  color: #94A3B8;
+  font-size: 11px;
+  text-align: center;
 }
 
 .photo-preview-box img {
@@ -1912,7 +2069,7 @@ body {
 
   .admin-search-wrapper input {
     height: 44px;
-    box-shadow: var(--shadow-sm);
+    box-shadow: none;
   }
 }
 
@@ -1933,11 +2090,8 @@ body {
 
 .report-icon i {
   font-size: 28px;
+  color: var(--primary);
 }
-
-.report-card.green .report-icon i { color: var(--primary); }
-.report-card.blue .report-icon i { color: var(--info); }
-.report-card.orange .report-icon i { color: var(--warning); }
 
 .card-img-fallback i {
   font-size: 42px;
@@ -2043,4 +2197,218 @@ body.role-admin #btnToggleCartMobile,
 body:has(#adminView.active) #btnToggleCartMobile {
   display: none !important;
 }
+
+/* ================= METODE PEMBAYARAN KASIR (CASH & QRIS) ================= */
+.payment-method-selector {
+  margin-bottom: 12px;
+}
+
+.section-micro-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.payment-toggle-group {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.btn-pay-method {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-pay-method:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.btn-pay-method.active {
+  background: var(--primary-bg);
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.btn-pay-method i {
+  font-size: 16px;
+}
+
+.qris-notice-box {
+  background: #f0fdf4;
+  border: 1.5px dashed var(--primary);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.qris-notice-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--primary);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.qris-notice-box p {
+  font-size: 11.5px;
+  color: #166534;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* ================= KARTU METRIK FINANSIAL & SALDO ================= */
+.report-card,
+.report-card.green {
+  border: 1.5px solid var(--primary);
+}
+
+.report-card .report-icon,
+.report-card.purple .report-icon,
+.report-card.emerald .report-icon,
+.report-card.orange .report-icon,
+.report-card.green .report-icon { 
+  background: var(--primary); 
+}
+
+.report-card .report-icon i,
+.report-card.purple .report-icon i,
+.report-card.emerald .report-icon i,
+.report-card.orange .report-icon i,
+.report-card.green .report-icon i { 
+  color: #ffffff; 
+}
+
+.saldo-breakdown-tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.tag-cash, .tag-qris {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tag-cash {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.tag-cash i,
+.tag-cash strong {
+  color: #166534;
+}
+
+.tag-qris {
+  background: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary);
+}
+
+.tag-qris i,
+.tag-qris strong {
+  color: #ffffff;
+}
+
+.report-sublabel {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 3px;
+}
+
+/* ================= ESTIMASI LABA PRODUK ================= */
+.profit-margin-box {
+  background: linear-gradient(145deg, #f0fdf4, #dcfce7);
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-top: -4px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profit-margin-box .margin-label {
+  font-size: 13px;
+  color: #166534;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.profit-margin-box .margin-value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #15803d;
+}
+
+/* ================= BADGE METODE PEMBAYARAN DI TABEL ================= */
+.badge-pay-method {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.badge-pay-cash {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.badge-pay-cash i {
+  color: #166534;
+}
+
+.badge-pay-qris {
+  background: var(--primary);
+  color: #ffffff;
+  border: 1px solid var(--primary);
+}
+
+.badge-pay-qris i {
+  color: #ffffff;
+}
+
+.profit-tag {
+  color: #166534;
+  font-weight: 700;
+  font-size: 13px;
+}
+
 

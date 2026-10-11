@@ -6,16 +6,18 @@
 const STORAGE_KEYS = {
   PRODUCTS: 'alkamart_products_v5',
   SALES: 'alkamart_sales_v5',
+  WITHDRAWALS: 'alkamart_withdrawals_v5',
   GOOGLE_SHEETS_URL: 'alkamart_gsheet_url_v5',
   ROLE: 'alkamart_active_role_v5'
 };
 
-const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbw9_ls77fF7vA83B5xmGz-HokYsjGvddiB4p6RAgjJHuPRjHqg_GO-cvsbo3pH8q-On/exec';
+const DEFAULT_GSHEET_URL = 'https://script.google.com/macros/s/AKfycbxm0XvmvA0MARv1Ev-1FycEwIfYnu9FmwRQm4-IkQuI3aIpldGxFzxdGWKWwV9LFbY/exec';
 
 class AlkamartStore {
   constructor() {
     this.products = [];
     this.sales = [];
+    this.withdrawals = [];
     this.googleSheetsUrl = '';
     this.activeRole = 'cashier';
     this.init();
@@ -32,11 +34,22 @@ class AlkamartStore {
       }
     } else {
       this.products = [...DEFAULT_PRODUCTS];
-      this.saveProducts();
-    // Auto-fix gambar jika ada produk tanpa foto atau link rusak
+    }
+
+    // Pastikan setiap produk memiliki costPrice (Harga Beli / Modal)
+    let needsSaveProducts = false;
     this.products.forEach(p => {
+      if (p.costPrice === undefined || p.costPrice === null || isNaN(p.costPrice)) {
+        p.costPrice = Math.round(Number(p.price || 0) * 0.8);
+        needsSaveProducts = true;
+      } else {
+        p.costPrice = Number(p.costPrice);
+      }
+      p.price = Number(p.price || 0);
+
+      // Auto-fix gambar jika ada produk tanpa foto atau link rusak
       if (!p.imageUrl || p.imageUrl.trim() === '') {
-        const nameLower = p.name.toLowerCase();
+        const nameLower = (p.name || '').toLowerCase();
         if (nameLower.includes('kacang')) {
           p.imageUrl = 'https://images.unsplash.com/photo-1568471173242-461f0a730452?w=500&auto=format&fit=crop&q=80';
         } else if (nameLower.includes('alpukat') || nameLower.includes('es')) {
@@ -44,15 +57,16 @@ class AlkamartStore {
         } else if (nameLower.includes('sate') || nameLower.includes('satw')) {
           p.imageUrl = 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500&auto=format&fit=crop&q=80';
         } else {
-          // Cari foto default berdasarkan nama atau fallback
           const defaultMatch = DEFAULT_PRODUCTS.find(dp => dp.name.toLowerCase() === nameLower);
           if (defaultMatch) {
             p.imageUrl = defaultMatch.imageUrl;
           }
         }
+        needsSaveProducts = true;
       }
     });
-    this.saveProducts();
+    if (needsSaveProducts || !savedProducts) {
+      this.saveProducts();
     }
 
     // 2. Load Sales
@@ -68,9 +82,40 @@ class AlkamartStore {
       this.saveSales();
     }
 
-    // 3. Load Configs (Default to central Google Sheets URL if not explicitly changed)
+    // Normalisasi data sales (paymentMethod & item costPrice)
+    this.sales.forEach(s => {
+      if (!s.paymentMethod) s.paymentMethod = 'cash';
+      if (s.items && Array.isArray(s.items)) {
+        s.items.forEach(it => {
+          if (it.costPrice === undefined || it.costPrice === null) {
+            const prod = this.products.find(p => p.id === it.productId);
+            it.costPrice = prod ? prod.costPrice : Math.round(Number(it.price || 0) * 0.8);
+          }
+        });
+      }
+    });
+
+    // 3. Load Withdrawals (Tarik Uang / Kas Keluar)
+    const savedWithdrawals = localStorage.getItem(STORAGE_KEYS.WITHDRAWALS);
+    if (savedWithdrawals) {
+      try {
+        this.withdrawals = JSON.parse(savedWithdrawals);
+      } catch (e) {
+        this.withdrawals = [...DEFAULT_WITHDRAWALS];
+      }
+    } else {
+      this.withdrawals = [...DEFAULT_WITHDRAWALS];
+      this.saveWithdrawals();
+    }
+
+    // 4. Load Configs
     const savedUrl = localStorage.getItem(STORAGE_KEYS.GOOGLE_SHEETS_URL);
-    this.googleSheetsUrl = (savedUrl && savedUrl.trim()) ? savedUrl.trim() : DEFAULT_GSHEET_URL;
+    if (savedUrl === 'https://script.google.com/macros/s/AKfycbw9_ls77fF7vA83B5xmGz-HokYsjGvddiB4p6RAgjJHuPRjHqg_GO-cvsbo3pH8q-On/exec') {
+      this.googleSheetsUrl = DEFAULT_GSHEET_URL;
+      localStorage.setItem(STORAGE_KEYS.GOOGLE_SHEETS_URL, DEFAULT_GSHEET_URL);
+    } else {
+      this.googleSheetsUrl = (savedUrl && savedUrl.trim()) ? savedUrl.trim() : DEFAULT_GSHEET_URL;
+    }
     this.activeRole = localStorage.getItem(STORAGE_KEYS.ROLE) || 'cashier';
   }
 
@@ -80,6 +125,10 @@ class AlkamartStore {
 
   saveSales() {
     localStorage.setItem(STORAGE_KEYS.SALES, JSON.stringify(this.sales));
+  }
+
+  saveWithdrawals() {
+    localStorage.setItem(STORAGE_KEYS.WITHDRAWALS, JSON.stringify(this.withdrawals));
   }
 
   setRole(role) {
@@ -94,6 +143,9 @@ class AlkamartStore {
 
   // --- CRUD Produk ---
   addProduct(product) {
+    if (product.costPrice === undefined || product.costPrice === null) {
+      product.costPrice = Math.round(Number(product.price || 0) * 0.8);
+    }
     this.products.unshift(product);
     this.saveProducts();
     if (this.googleSheetsUrl) {
@@ -133,6 +185,18 @@ class AlkamartStore {
 
   // --- Transaksi Penjualan ---
   recordSale(sale) {
+    if (!sale.paymentMethod) sale.paymentMethod = 'cash';
+    
+    // Pastikan item memiliki costPrice
+    if (sale.items && Array.isArray(sale.items)) {
+      sale.items.forEach(it => {
+        if (it.costPrice === undefined || it.costPrice === null) {
+          const prod = this.products.find(p => p.id === it.productId);
+          it.costPrice = prod ? prod.costPrice : Math.round(Number(it.price || 0) * 0.8);
+        }
+      });
+    }
+
     this.sales.unshift(sale);
     this.saveSales();
 
@@ -159,6 +223,121 @@ class AlkamartStore {
     }
   }
 
+  // --- Tarik Uang / Kas Keluar ---
+  recordWithdrawal(withdrawal) {
+    if (!withdrawal.id) {
+      withdrawal.id = 'WD-' + Date.now();
+    }
+    if (!withdrawal.date) {
+      withdrawal.date = new Date().toISOString();
+    }
+    this.withdrawals.unshift(withdrawal);
+    this.saveWithdrawals();
+    if (this.googleSheetsUrl) {
+      this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on withdrawal:", err));
+    }
+    return withdrawal;
+  }
+
+  deleteWithdrawal(id) {
+    this.withdrawals = this.withdrawals.filter(w => w.id !== id);
+    this.saveWithdrawals();
+    if (this.googleSheetsUrl) {
+      this.syncAllToGoogleSheets().catch(err => console.warn("Auto-sync error on deleteWithdrawal:", err));
+    }
+  }
+
+  // --- Ringkasan Keuangan & Saldo (Financial Analytics) ---
+  getFinancialSummary() {
+    // 1. Total Penjualan Cash & QRIS
+    const cashSalesAmount = this.sales
+      .filter(s => (s.paymentMethod || 'cash').toLowerCase() !== 'qris')
+      .reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+
+    const qrisSalesAmount = this.sales
+      .filter(s => (s.paymentMethod || '').toLowerCase() === 'qris')
+      .reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+
+    const totalSalesAmount = cashSalesAmount + qrisSalesAmount;
+
+    // 2. Tarik Uang (Pengeluaran)
+    const cashWithdrawn = this.withdrawals
+      .filter(w => (w.source || 'cash').toLowerCase() !== 'qris')
+      .reduce((sum, w) => sum + Number(w.amount || 0), 0);
+
+    const qrisWithdrawn = this.withdrawals
+      .filter(w => (w.source || '').toLowerCase() === 'qris')
+      .reduce((sum, w) => sum + Number(w.amount || 0), 0);
+
+    const totalWithdrawn = cashWithdrawn + qrisWithdrawn;
+
+    // 3. Saldo Kas Riil
+    const saldoCash = cashSalesAmount - cashWithdrawn;
+    const saldoQris = qrisSalesAmount - qrisWithdrawn;
+    const totalSaldo = totalSalesAmount - totalWithdrawn;
+
+    // 4. Perhitungan Mingguan (7 Hari Terakhir)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+
+    const weeklySales = this.sales.filter(s => new Date(s.date) >= sevenDaysAgo);
+    const weeklyGrossRevenue = weeklySales.reduce((sum, s) => sum + Number(s.totalAmount || 0), 0);
+
+    let weeklyHpp = 0;
+    weeklySales.forEach(s => {
+      (s.items || []).forEach(item => {
+        let cPrice = item.costPrice;
+        if (cPrice === undefined || cPrice === null) {
+          const prod = this.products.find(p => p.id === item.productId);
+          cPrice = prod ? prod.costPrice : Math.round(Number(item.price || 0) * 0.8);
+        }
+        weeklyHpp += (Number(cPrice) * Number(item.quantity || 1));
+      });
+    });
+
+    const weeklyNetProfit = weeklyGrossRevenue - weeklyHpp;
+
+    // 5. Total HPP & Laba Bersih Keseluruhan
+    let totalHpp = 0;
+    this.sales.forEach(s => {
+      (s.items || []).forEach(item => {
+        let cPrice = item.costPrice;
+        if (cPrice === undefined || cPrice === null) {
+          const prod = this.products.find(p => p.id === item.productId);
+          cPrice = prod ? prod.costPrice : Math.round(Number(item.price || 0) * 0.8);
+        }
+        totalHpp += (Number(cPrice) * Number(item.quantity || 1));
+      });
+    });
+
+    const totalNetProfit = totalSalesAmount - totalHpp;
+
+    // 6. Nilai Total Aset Inventaris (Stok x Harga Beli)
+    const totalInventoryValue = this.products.reduce((sum, p) => {
+      return sum + (Number(p.costPrice || 0) * Number(p.stock || 0));
+    }, 0);
+
+    return {
+      cashSalesAmount,
+      qrisSalesAmount,
+      totalSalesAmount,
+      cashWithdrawn,
+      qrisWithdrawn,
+      totalWithdrawn,
+      saldoCash,
+      saldoQris,
+      totalSaldo,
+      weeklyGrossRevenue,
+      weeklyHpp,
+      weeklyNetProfit,
+      totalHpp,
+      totalNetProfit,
+      totalInventoryValue,
+      weeklySalesCount: weeklySales.length
+    };
+  }
+
   // --- Google Sheets Sync Adapter (CORS Safe) ---
   async syncAllToGoogleSheets() {
     if (!this.googleSheetsUrl) throw new Error("URL Google Sheets belum diatur di menu Pengaturan!");
@@ -166,11 +345,12 @@ class AlkamartStore {
     const payload = {
       action: 'syncAll',
       products: this.products,
-      sales: this.sales
+      sales: this.sales,
+      withdrawals: this.withdrawals,
+      financialSummary: this.getFinancialSummary()
     };
 
     try {
-      // Gunakan mode no-cors untuk kompatibilitas penuh dengan redirect Google Apps Script
       await fetch(this.googleSheetsUrl, {
         method: 'POST',
         mode: 'no-cors',
@@ -178,7 +358,7 @@ class AlkamartStore {
         body: JSON.stringify(payload)
       });
 
-      return { status: 'success', message: 'Data produk dan transaksi berhasil dikirim ke Google Sheets!' };
+      return { status: 'success', message: 'Data produk, transaksi, rekap pendapatan, dan kas berhasil dikirim ke Google Sheets!' };
     } catch (err) {
       throw new Error("Gagal mengirim data ke Google Sheets: " + err.message);
     }
@@ -196,7 +376,6 @@ class AlkamartStore {
           this.products = data.products;
           this.saveProducts();
         } else if (this.products && this.products.length > 0) {
-          // Jika spreadsheet baru dan masih kosong, isi otomatis dari data lokal
           this.syncAllToGoogleSheets().catch(e => console.warn("Auto-populate error:", e));
         }
 
@@ -204,11 +383,16 @@ class AlkamartStore {
           this.sales = data.sales;
           this.saveSales();
         }
+
+        if (data.withdrawals && Array.isArray(data.withdrawals)) {
+          this.withdrawals = data.withdrawals;
+          this.saveWithdrawals();
+        }
       }
 
       return data;
     } catch (err) {
-      throw new Error("Gagal menarik data dari Google Sheets. Pastikan akses deployment diatur ke 'Siapa saja' (Anyone): " + err.message);
+      throw new Error("Gagal menarik data dari Google Sheets: " + err.message);
     }
   }
 
@@ -238,10 +422,11 @@ class AlkamartStore {
   exportBackupJSON() {
     const backup = {
       app: 'Alkamart',
-      version: '1.2.0',
+      version: '2.0.0',
       exportedAt: new Date().toISOString(),
       products: this.products,
-      sales: this.sales
+      sales: this.sales,
+      withdrawals: this.withdrawals
     };
 
     const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -263,13 +448,19 @@ class AlkamartStore {
       this.sales = data.sales;
       this.saveSales();
     }
+    if (data.withdrawals && Array.isArray(data.withdrawals)) {
+      this.withdrawals = data.withdrawals;
+      this.saveWithdrawals();
+    }
   }
 
   resetToDefault() {
     this.products = [...DEFAULT_PRODUCTS];
     this.sales = [...DEFAULT_SALES];
+    this.withdrawals = [...DEFAULT_WITHDRAWALS];
     this.saveProducts();
     this.saveSales();
+    this.saveWithdrawals();
   }
 }
 

@@ -752,22 +752,37 @@ function renderCart() {
   calculateChange();
 }
 
+let activePaymentMethod = 'cash'; // 'cash' atau 'qris'
+
 function calculateChange() {
   const totalPrice = cart.reduce((sum, i) => sum + i.subtotal, 0);
   const inputPaid = document.getElementById('inputCashPaid');
   const changeEl = document.getElementById('cartChangeText');
   const btnCheckout = document.getElementById('btnCheckout');
 
+  if (cart.length === 0) {
+    if (changeEl) {
+      changeEl.textContent = 'Rp 0';
+      changeEl.style.color = 'var(--text-muted)';
+    }
+    if (btnCheckout) btnCheckout.disabled = true;
+    return;
+  }
+
+  // Jika metode pembayaran QRIS aktif
+  if (activePaymentMethod === 'qris') {
+    if (changeEl) {
+      changeEl.textContent = 'Rp 0 (Pas QRIS)';
+      changeEl.style.color = 'var(--primary)';
+    }
+    if (btnCheckout) btnCheckout.disabled = false;
+    return;
+  }
+
+  // Jika metode pembayaran Tunai (Cash)
   const rawVal = inputPaid.value.replace(/[^0-9]/g, '');
   const paid = Number(rawVal || 0);
   const change = paid - totalPrice;
-
-  if (cart.length === 0) {
-    changeEl.textContent = 'Rp 0';
-    changeEl.style.color = 'var(--text-muted)';
-    btnCheckout.disabled = true;
-    return;
-  }
 
   // Jika belum diisi, kita biarkan tombol aktif jika kasir ingin bayar uang pas langsung
   if (rawVal === '') {
@@ -797,35 +812,58 @@ function processCheckout() {
 
   const totalPrice = cart.reduce((sum, i) => sum + i.subtotal, 0);
   const inputPaid = document.getElementById('inputCashPaid');
-  const rawDigits = inputPaid.value.replace(/[^0-9]/g, '');
-  let paid = Number(rawDigits || 0);
+  let paid = totalPrice;
+  let change = 0;
 
-  // Jika kasir langsung klik bayar tanpa ketik, otomatis dianggap uang pas
-  if (paid === 0 || isNaN(paid)) {
+  if (activePaymentMethod === 'qris') {
     paid = totalPrice;
-    inputPaid.value = totalPrice > 0 ? totalPrice.toLocaleString('id-ID') : '0';
-  }
+    change = 0;
+  } else {
+    const rawDigits = inputPaid.value.replace(/[^0-9]/g, '');
+    paid = Number(rawDigits || 0);
 
-  if (paid < totalPrice) {
-    showToast("Nominal pembayaran masih kurang dari total belanja!", "error");
-    return;
+    // Jika kasir langsung klik bayar tanpa ketik, otomatis dianggap uang pas
+    if (paid === 0 || isNaN(paid)) {
+      paid = totalPrice;
+      inputPaid.value = totalPrice > 0 ? totalPrice.toLocaleString('id-ID') : '0';
+    }
+
+    if (paid < totalPrice) {
+      showToast("Nominal pembayaran masih kurang dari total belanja!", "error");
+      return;
+    }
+    change = paid - totalPrice;
   }
 
   const trxId = 'TRX-' + Date.now().toString().slice(-6);
   const now = new Date().toISOString();
 
+  // Rekam costPrice pada setiap item untuk keakuratan laba historis
+  const saleItems = cart.map(item => {
+    const prod = store.products.find(p => p.id === item.productId);
+    const itemCost = (item.costPrice !== undefined && item.costPrice !== null)
+      ? Number(item.costPrice)
+      : (prod && prod.costPrice !== undefined ? Number(prod.costPrice) : Math.round(Number(item.price || 0) * 0.8));
+
+    return {
+      ...item,
+      costPrice: itemCost
+    };
+  });
+
   const sale = {
     id: trxId,
     date: now,
     cashierName: "Kasir Alkamart",
+    paymentMethod: activePaymentMethod,
     totalAmount: totalPrice,
     paidAmount: paid,
-    changeAmount: paid - totalPrice,
+    changeAmount: change,
     total: totalPrice,
     paid: paid,
-    change: paid - totalPrice,
-    items: [...cart],
-    itemsSummary: cart.map(i => `${i.name} (${i.quantity})`).join(', ')
+    change: change,
+    items: saleItems,
+    itemsSummary: saleItems.map(i => `${i.name} (${i.quantity})`).join(', ')
   };
 
   // Simpan transaksi & kurangi stok
@@ -843,7 +881,7 @@ function processCheckout() {
 
   // Tampilkan Modal Struk Nota
   openReceiptModal(sale);
-  showToast("Transaksi berhasil dicatat!", "success");
+  showToast(`Transaksi berhasil dicatat (${activePaymentMethod === 'qris' ? 'QRIS' : 'Tunai'})!`, "success");
 }
 
 // Modal Struk Nota
@@ -851,20 +889,30 @@ function openReceiptModal(sale) {
   document.getElementById('recTrxId').textContent = sale.id;
   document.getElementById('recCashierName').textContent = sale.cashierName;
   document.getElementById('recDateTime').textContent = formatDateTime(sale.date);
+
+  const recMethodEl = document.getElementById('recPaymentMethod');
+  if (recMethodEl) {
+    recMethodEl.textContent = (sale.paymentMethod || 'cash').toLowerCase() === 'qris' ? 'QRIS (NON-TUNAI)' : 'TUNAI (CASH)';
+  }
+
   document.getElementById('recTotalAmount').textContent = formatRp(sale.totalAmount);
   document.getElementById('recPaidAmount').textContent = formatRp(sale.paidAmount);
   document.getElementById('recChangeAmount').textContent = formatRp(sale.changeAmount);
 
   const itemsListEl = document.getElementById('recItemsList');
-  itemsListEl.innerHTML = sale.items.map(item => `
-    <div class="receipt-item-line">
-      <span>${item.name}</span>
-      <span>${formatRp(item.subtotal)}</span>
-    </div>
-    <div class="receipt-item-calc">
-      ${item.quantity} x ${formatRp(item.price)}
-    </div>
-  `).join('');
+  if (sale.items && Array.isArray(sale.items) && sale.items.length > 0) {
+    itemsListEl.innerHTML = sale.items.map(item => `
+      <div class="receipt-item-line">
+        <span>${item.name || 'Barang'}</span>
+        <span>${formatRp(item.subtotal || (item.quantity * item.price))}</span>
+      </div>
+      <div class="receipt-item-calc">
+        ${item.quantity} x ${formatRp(item.price)}
+      </div>
+    `).join('');
+  } else {
+    itemsListEl.innerHTML = `<div class="receipt-item-line"><span style="color: #666; font-style: italic;">${sale.itemsSummary || 'Rincian item tidak tersedia'}</span></div>`;
+  }
 
   document.getElementById('receiptModal').classList.add('active');
 }
@@ -885,7 +933,7 @@ window.deleteSaleById = async function(saleId) {
     message: `Batalkan riwayat transaksi <strong>${saleId}</strong>?<br><small style="color: var(--danger); display: inline-block; margin-top: 6px;">Catatan: Stok barang tidak akan otomatis dikembalikan.</small>`,
     confirmText: "Ya, Batalkan",
     cancelText: "Kembali",
-    type: "warning",
+    type: "danger",
     icon: "ri-error-warning-line"
   });
 
@@ -904,9 +952,13 @@ function shareReceiptToWhatsApp(sale) {
   text += `Waktu: ${formatDateTime(sale.date)}%0A`;
   text += `Kasir: ${sale.cashierName}%0A`;
   text += `-------------------------%0A`;
-  sale.items.forEach(i => {
-    text += `${i.name} (${i.quantity}x) = ${formatRp(i.subtotal)}%0A`;
-  });
+  if (sale.items && Array.isArray(sale.items) && sale.items.length > 0) {
+    sale.items.forEach(i => {
+      text += `${i.name || 'Barang'} (${i.quantity}x) = ${formatRp(i.subtotal || (i.quantity * i.price))}%0A`;
+    });
+  } else {
+    text += `${sale.itemsSummary || 'Rincian item tidak tersedia'}%0A`;
+  }
   text += `-------------------------%0A`;
   text += `*Total: ${formatRp(sale.totalAmount)}*%0A`;
   text += `Bayar: ${formatRp(sale.paidAmount)}%0A`;
@@ -932,7 +984,8 @@ function renderAdminProductsTable() {
   const tbody = document.getElementById('adminProductTableBody');
   const query = (document.getElementById('adminProductSearch')?.value || '').toLowerCase().trim();
 
-  const totalAsset = store.products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+  // Total nilai aset warung berdasarkan harga modal barang
+  const totalAsset = store.products.reduce((sum, p) => sum + (Number(p.costPrice || 0) * Number(p.stock || 0)), 0);
   document.getElementById('adminTotalProductCount').textContent = store.products.length;
   document.getElementById('adminTotalAssetValue').textContent = formatRp(totalAsset);
 
@@ -949,6 +1002,10 @@ function renderAdminProductsTable() {
       statusLabel = `Menipis (${p.stock})`;
     }
 
+    const cost = Number(p.costPrice || 0);
+    const price = Number(p.price || 0);
+    const profitPerPcs = price - cost;
+
     return `
       <tr>
         <td>
@@ -958,13 +1015,15 @@ function renderAdminProductsTable() {
         </td>
         <td><strong>${p.name}</strong></td>
         <td><span class="badge-cat">${p.category || 'Umum'}</span></td>
-        <td><strong>${formatRp(p.price)}</strong></td>
+        <td><span class="text-muted">${formatRp(cost)}</span></td>
+        <td><strong>${formatRp(price)}</strong></td>
+        <td><span class="profit-tag">+${formatRp(profitPerPcs)}</span></td>
         <td><strong>${p.stock}</strong> item</td>
         <td><span class="status-tag ${statusClass}">${statusLabel}</span></td>
         <td>
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-outline btn-sm" onclick="openEditProductModal(\'${p.id}\')"><i class="ri-edit-line"></i> Edit</button>
-            <button class="btn btn-danger-outline btn-sm" onclick="confirmDeleteProduct(\'${p.id}\')"><i class="ri-delete-bin-line"></i> Hapus</button>
+            <button class="btn btn-outline btn-sm" onclick="openEditProductModal('${p.id}')"><i class="ri-edit-line"></i> Edit</button>
+            <button class="btn btn-danger-outline btn-sm" style="padding: 0 10px;" onclick="confirmDeleteProduct('${p.id}')" title="Hapus"><i class="ri-delete-bin-line"></i></button>
           </div>
         </td>
       </tr>
@@ -972,12 +1031,38 @@ function renderAdminProductsTable() {
   }).join('');
 }
 
+// Live Update Preview Margin Keuntungan Produk
+function updateProductMarginPreview() {
+  const costEl = document.getElementById('formProductCostPrice');
+  const priceEl = document.getElementById('formProductPrice');
+  const marginValEl = document.getElementById('productMarginValue');
+  if (!costEl || !priceEl || !marginValEl) return;
+
+  const cost = Number(costEl.value.replace(/[^0-9]/g, '') || 0);
+  const price = Number(priceEl.value.replace(/[^0-9]/g, '') || 0);
+  const profit = price - cost;
+  const percent = cost > 0 ? Math.round((profit / cost) * 100) : 0;
+
+  if (price > 0) {
+    marginValEl.textContent = `${formatRp(profit)} (${profit >= 0 ? '+' : ''}${percent}%)`;
+    marginValEl.style.color = profit >= 0 ? 'var(--primary)' : 'var(--danger)';
+  } else {
+    marginValEl.textContent = 'Rp 0 (0%)';
+    marginValEl.style.color = 'var(--text-muted)';
+  }
+}
+
 // Modal Tambah / Edit Produk
 function openAddProductModal() {
   document.getElementById('productForm').reset();
+  document.getElementById('formProductCategory').value = 'Makanan';
+  updateCustomSelectUI('Makanan');
   document.getElementById('formProductId').value = '';
+  document.getElementById('formProductCostPrice').value = '';
+  document.getElementById('formProductPrice').value = '';
   document.getElementById('productModalTitle').textContent = 'Tambah Barang Baru';
   document.getElementById('productPhotoPreview').innerHTML = '<span class="preview-placeholder">Foto Produk</span>';
+  updateProductMarginPreview();
   document.getElementById('productFormModal').classList.add('active');
 }
 
@@ -987,7 +1072,10 @@ function openEditProductModal(productId) {
 
   document.getElementById('formProductId').value = prod.id;
   document.getElementById('formProductName').value = prod.name;
-  document.getElementById('formProductCategory').value = prod.category || 'Makanan';
+  const categoryVal = prod.category || 'Makanan';
+  document.getElementById('formProductCategory').value = categoryVal;
+  updateCustomSelectUI(categoryVal);
+  document.getElementById('formProductCostPrice').value = prod.costPrice ? Number(prod.costPrice).toLocaleString('id-ID') : '';
   document.getElementById('formProductPrice').value = prod.price ? Number(prod.price).toLocaleString('id-ID') : '';
   document.getElementById('formProductStock').value = prod.stock;
   document.getElementById('formProductImageUrl').value = prod.imageUrl || '';
@@ -999,6 +1087,7 @@ function openEditProductModal(productId) {
     preview.innerHTML = `<span class="card-img-fallback">${prod.fallbackIcon || '📦'}</span>`;
   }
 
+  updateProductMarginPreview();
   document.getElementById('productModalTitle').textContent = 'Edit Data Barang';
   document.getElementById('productFormModal').classList.add('active');
 }
@@ -1074,45 +1163,358 @@ function openQuickRestockModal(productId) {
   document.getElementById('quickRestockModal').classList.add('active');
 }
 
-// Rekap Pendapatan
+// Rekap Pendapatan & Finansial
 function renderReportsTab() {
+  const fin = store.getFinancialSummary();
+
+  // Kartu Ringkasan Finansial
+  const reportTotalSaldoEl = document.getElementById('reportTotalSaldo');
+  if (reportTotalSaldoEl) reportTotalSaldoEl.textContent = formatRp(fin.totalSaldo);
+
+  const reportSaldoCashEl = document.getElementById('reportSaldoCash');
+  if (reportSaldoCashEl) reportSaldoCashEl.textContent = formatRp(fin.saldoCash);
+
+  const reportSaldoQrisEl = document.getElementById('reportSaldoQris');
+  if (reportSaldoQrisEl) reportSaldoQrisEl.textContent = formatRp(fin.saldoQris);
+
+  const reportWeeklyGrossEl = document.getElementById('reportWeeklyGross');
+  if (reportWeeklyGrossEl) reportWeeklyGrossEl.textContent = formatRp(fin.weeklyGrossRevenue);
+
+  const reportWeeklyCountEl = document.getElementById('reportWeeklyCount');
+  if (reportWeeklyCountEl) reportWeeklyCountEl.textContent = `${fin.weeklySalesCount} transaksi (7 hari terakhir)`;
+
+  const reportWeeklyNetEl = document.getElementById('reportWeeklyNet');
+  if (reportWeeklyNetEl) {
+    reportWeeklyNetEl.textContent = formatRp(fin.weeklyNetProfit);
+    reportWeeklyNetEl.style.color = fin.weeklyNetProfit >= 0 ? '#059669' : 'var(--danger)';
+  }
+
+  const reportTotalWithdrawnEl = document.getElementById('reportTotalWithdrawn');
+  if (reportTotalWithdrawnEl) reportTotalWithdrawnEl.textContent = formatRp(fin.totalWithdrawn);
+
+  const reportWithdrawnCountEl = document.getElementById('reportWithdrawnCount');
+  if (reportWithdrawnCountEl) reportWithdrawnCountEl.textContent = `${store.withdrawals.length} kali penarikan kas`;
+
+  // Fallback kartu lama jika ada
   const totalRevEl = document.getElementById('reportTotalRevenue');
+  if (totalRevEl) totalRevEl.textContent = formatRp(fin.totalSalesAmount);
   const totalTrxEl = document.getElementById('reportTotalTransactions');
-  const avgTrxEl = document.getElementById('reportAvgTransaction');
+  if (totalTrxEl) totalTrxEl.textContent = store.sales.length;
+
+  // 1. Render Tabel Riwayat Transaksi Penjualan
   const historyTbody = document.getElementById('salesHistoryTableBody');
+  if (historyTbody) {
+    if (store.sales.length === 0) {
+      historyTbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 20px;">Belum ada riwayat transaksi penjualan.</td></tr>';
+    } else {
+      historyTbody.innerHTML = store.sales.map(s => {
+        const isQris = (s.paymentMethod || '').toLowerCase() === 'qris';
+        const methodBadge = `<span class="badge-pay-method ${isQris ? 'badge-pay-qris' : 'badge-pay-cash'}">
+          <i class="${isQris ? 'ri-qr-code-fill' : 'ri-money-dollar-circle-fill'}"></i> ${isQris ? 'QRIS' : 'Tunai'}
+        </span>`;
 
-  const totalRev = store.sales.reduce((sum, s) => sum + s.totalAmount, 0);
-  const totalTrx = store.sales.length;
-  const avgTrx = totalTrx > 0 ? totalRev / totalTrx : 0;
+        return `
+          <tr>
+            <td><strong>${s.id}</strong></td>
+            <td>${formatDateTime(s.date)}</td>
+            <td>${s.cashierName || 'Kasir'}</td>
+            <td>${methodBadge}</td>
+            <td style="max-width: 250px;">${s.itemsSummary || '-'}</td>
+            <td><strong style="color: var(--primary);">${formatRp(s.totalAmount)}</strong></td>
+            <td>
+              <div style="display: flex; gap: 6px;">
+                <button class="btn btn-outline btn-sm" onclick="viewReceiptById('${s.id}')">
+                  Lihat Nota
+                </button>
+                <button class="btn btn-danger-outline btn-sm" onclick="deleteSaleById('${s.id}')" title="Batalkan transaksi">
+                  ✕
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
 
-  totalRevEl.textContent = formatRp(totalRev);
-  totalTrxEl.textContent = totalTrx;
-  avgTrxEl.textContent = formatRp(avgTrx);
+  // 2. Render Tabel Riwayat Tarik Uang / Pengeluaran
+  renderWithdrawalsTable();
+}
 
-  if (store.sales.length === 0) {
-    historyTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 20px;">Belum ada riwayat transaksi.</td></tr>';
+function renderWithdrawalsTable() {
+  const tbody = document.getElementById('withdrawalsHistoryTableBody');
+  if (!tbody) return;
+
+  if (!store.withdrawals || store.withdrawals.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 24px; color: var(--text-muted);">Belum ada catatan penarikan kas / pengeluaran uang.</td></tr>';
     return;
   }
 
-  historyTbody.innerHTML = store.sales.map(s => `
+  tbody.innerHTML = store.withdrawals.map(w => {
+    const isQris = (w.source || '').toLowerCase() === 'qris';
+    const sourceBadge = `<span class="badge-pay-method ${isQris ? 'badge-pay-qris' : 'badge-pay-cash'}">
+      <i class="${isQris ? 'ri-qr-code-fill' : 'ri-money-dollar-circle-fill'}"></i> ${isQris ? 'QRIS' : 'Tunai'}
+    </span>`;
+
+    return `
+      <tr>
+        <td>${formatDateTime(w.date)}</td>
+        <td><strong style="color: #d97706; font-size: 14px;">${formatRp(w.amount)}</strong></td>
+        <td>${sourceBadge}</td>
+        <td><span class="badge-cat">${w.category || 'Lainnya'}</span></td>
+        <td style="max-width: 280px;">${w.notes || '-'}</td>
+        <td>
+          <button class="btn btn-danger-outline btn-sm" style="padding: 0 10px;" onclick="deleteWithdrawalById('${w.id}')" title="Hapus catatan">
+            <i class="ri-delete-bin-line"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.deleteWithdrawalById = async function(id) {
+  const w = store.withdrawals.find(item => item.id === id);
+  if (!w) return;
+
+  const confirmed = await showCustomConfirm({
+    title: "Hapus Catatan Tarik Uang?",
+    message: `Hapus catatan penarikan <strong>${formatRp(w.amount)}</strong> (${w.category})?<br><small style="color: var(--text-muted); display:inline-block; margin-top:6px;">Saldo kas akan otomatis disesuaikan kembali.</small>`,
+    confirmText: "Ya, Hapus",
+    cancelText: "Batal",
+    type: "danger",
+    icon: "ri-delete-bin-line"
+  });
+
+  if (confirmed) {
+    store.deleteWithdrawal(id);
+    renderReportsTab();
+    showToast("Catatan penarikan kas berhasil dihapus!", "info");
+  }
+};
+
+// ==========================================
+// FITUR: CATAT PENJUALAN MANUAL (WARUNG TUTUP)
+// ==========================================
+let manualSaleItems = [];
+
+function openManualSaleModal() {
+  const selectEl = document.getElementById('manualSaleProductSelect');
+  if (selectEl) {
+    selectEl.innerHTML = '<option value="">-- Pilih Barang --</option>' + store.products.map(p => `
+      <option value="${p.id}" ${p.stock <= 0 ? 'disabled' : ''}>
+        ${p.name} - ${formatRp(p.price)} (Sisa: ${p.stock})
+      </option>
+    `).join('');
+  }
+
+  manualSaleItems = [];
+  renderManualSaleItemsTable();
+
+  const dtEl = document.getElementById('manualSaleDateTime');
+  if (dtEl) {
+    const localNow = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    dtEl.value = localNow;
+  }
+
+  const notesEl = document.getElementById('manualSaleNotes');
+  if (notesEl) notesEl.value = '';
+
+  const qtyInput = document.getElementById('manualSaleQtyInput');
+  if (qtyInput) qtyInput.value = '1';
+
+  document.getElementById('manualSaleModal').classList.add('active');
+}
+
+function renderManualSaleItemsTable() {
+  const tbody = document.getElementById('manualSaleItemsTableBody');
+  const totalText = document.getElementById('manualSaleTotalText');
+  if (!tbody) return;
+
+  if (manualSaleItems.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 18px;">Belum ada barang yang dipilih.</td></tr>';
+    if (totalText) totalText.textContent = 'Rp 0';
+    return;
+  }
+
+  const total = manualSaleItems.reduce((sum, item) => sum + item.subtotal, 0);
+  if (totalText) totalText.textContent = formatRp(total);
+
+  tbody.innerHTML = manualSaleItems.map((item, idx) => `
     <tr>
-      <td><strong>${s.id}</strong></td>
-      <td>${formatDateTime(s.date)}</td>
-      <td>${s.cashierName || 'Kasir'}</td>
-      <td style="max-width: 250px;">${s.itemsSummary || '-'}</td>
-      <td><strong style="color: var(--primary);">${formatRp(s.totalAmount)}</strong></td>
-      <td>
-        <div style="display: flex; gap: 6px;">
-          <button class="btn btn-outline btn-sm" onclick="viewReceiptById('${s.id}')">
-            Lihat Nota
-          </button>
-          <button class="btn btn-danger-outline btn-sm" onclick="deleteSaleById('${s.id}')" title="Batalkan transaksi">
-            ✕
-          </button>
-        </div>
+      <td><strong>${item.name}</strong><br><small class="text-muted">${formatRp(item.price)}/pcs</small></td>
+      <td style="text-align: center;">${item.quantity}</td>
+      <td style="text-align: right;"><strong>${formatRp(item.subtotal)}</strong></td>
+      <td style="text-align: center;">
+        <button type="button" class="btn btn-danger-outline btn-sm" onclick="removeManualSaleItem(${idx})">✕</button>
       </td>
     </tr>
   `).join('');
+}
+
+window.removeManualSaleItem = function(index) {
+  manualSaleItems.splice(index, 1);
+  renderManualSaleItemsTable();
+};
+
+function addProductToManualSale() {
+  const selectEl = document.getElementById('manualSaleProductSelect');
+  const qtyEl = document.getElementById('manualSaleQtyInput');
+  const prodId = selectEl?.value;
+  const qty = parseInt(qtyEl?.value || '1', 10);
+
+  if (!prodId) {
+    showToast("Silakan pilih barang terlebih dahulu!", "warning");
+    return;
+  }
+  if (isNaN(qty) || qty <= 0) {
+    showToast("Jumlah barang minimal 1!", "warning");
+    return;
+  }
+
+  const prod = store.products.find(p => p.id === prodId);
+  if (!prod) return;
+
+  if (qty > prod.stock) {
+    showToast(`Stok "${prod.name}" tidak mencukupi (Tersisa: ${prod.stock})`, "error");
+    return;
+  }
+
+  const existing = manualSaleItems.find(i => i.productId === prodId);
+  if (existing) {
+    if (existing.quantity + qty > prod.stock) {
+      showToast(`Total jumlah (${existing.quantity + qty}) melebihi sisa stok (${prod.stock})`, "error");
+      return;
+    }
+    existing.quantity += qty;
+    existing.subtotal = existing.quantity * existing.price;
+  } else {
+    manualSaleItems.push({
+      productId: prod.id,
+      name: prod.name,
+      price: prod.price,
+      costPrice: prod.costPrice !== undefined ? prod.costPrice : Math.round(prod.price * 0.8),
+      quantity: qty,
+      subtotal: prod.price * qty
+    });
+  }
+
+  renderManualSaleItemsTable();
+  selectEl.value = '';
+  qtyEl.value = '1';
+  showToast(`"${prod.name}" (${qty} pcs) ditambahkan ke daftar manual.`, "info");
+}
+
+function saveManualSale() {
+  if (manualSaleItems.length === 0) {
+    showToast("Tambahkan minimal 1 barang ke daftar penjualan manual!", "warning");
+    return;
+  }
+
+  const totalPrice = manualSaleItems.reduce((sum, item) => sum + item.subtotal, 0);
+  const payMethod = document.getElementById('manualSalePayMethod')?.value || 'cash';
+  const dtInput = document.getElementById('manualSaleDateTime')?.value;
+  const saleDate = dtInput ? new Date(dtInput).toISOString() : new Date().toISOString();
+  const notes = document.getElementById('manualSaleNotes')?.value.trim() || 'Penjualan Manual (Warung Tutup)';
+
+  const trxId = 'TRX-M-' + Date.now().toString().slice(-6);
+
+  const sale = {
+    id: trxId,
+    date: saleDate,
+    cashierName: "Admin (Manual)",
+    paymentMethod: payMethod,
+    totalAmount: totalPrice,
+    paidAmount: totalPrice,
+    changeAmount: 0,
+    total: totalPrice,
+    paid: totalPrice,
+    change: 0,
+    items: [...manualSaleItems],
+    itemsSummary: manualSaleItems.map(i => `${i.name} (${i.quantity})`).join(', ') + (notes ? ` [${notes}]` : '')
+  };
+
+  store.recordSale(sale);
+  lastCompletedSale = sale;
+
+  document.getElementById('manualSaleModal').classList.remove('active');
+  renderAdminProductsTable();
+  renderCashierCatalog();
+  renderReportsTab();
+
+  showToast(`Penjualan manual senilai ${formatRp(totalPrice)} berhasil dicatat!`, "success");
+}
+
+// ==========================================
+// FITUR: TARIK UANG / KAS KELUAR
+// ==========================================
+function openWithdrawalModal() {
+  const fin = store.getFinancialSummary();
+
+  const infoCash = document.getElementById('withdrawInfoSaldoCash');
+  if (infoCash) infoCash.textContent = formatRp(fin.saldoCash);
+
+  const infoQris = document.getElementById('withdrawInfoSaldoQris');
+  if (infoQris) infoQris.textContent = formatRp(fin.saldoQris);
+
+  document.getElementById('withdrawalForm').reset();
+
+  const dtEl = document.getElementById('formWithdrawalDate');
+  if (dtEl) {
+    const localNow = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    dtEl.value = localNow;
+  }
+
+  document.getElementById('withdrawalModal').classList.add('active');
+}
+
+async function handleWithdrawalSubmit(e) {
+  e.preventDefault();
+
+  const amountRaw = document.getElementById('formWithdrawalAmount')?.value.replace(/[^0-9]/g, '');
+  const amount = Number(amountRaw || 0);
+  const source = document.getElementById('formWithdrawalSource')?.value || 'cash';
+  const category = document.getElementById('formWithdrawalCategory')?.value || 'Lainnya';
+  const notes = document.getElementById('formWithdrawalNotes')?.value.trim();
+  const dtInput = document.getElementById('formWithdrawalDate')?.value;
+  const date = dtInput ? new Date(dtInput).toISOString() : new Date().toISOString();
+
+  if (amount <= 0) {
+    showToast("Nominal penarikan uang harus lebih dari Rp 0!", "error");
+    return;
+  }
+
+  if (!notes) {
+    showToast("Harap isi keterangan untuk apa uang tersebut digunakan!", "warning");
+    return;
+  }
+
+  const fin = store.getFinancialSummary();
+  const currentSaldo = source === 'qris' ? fin.saldoQris : fin.saldoCash;
+
+  if (amount > currentSaldo) {
+    const proceed = await showCustomConfirm({
+      title: "Saldo Tidak Mencukupi",
+      message: `Nominal penarikan <strong>${formatRp(amount)}</strong> melebihi saldo ${source === 'qris' ? 'QRIS' : 'Tunai'} saat ini (<strong>${formatRp(currentSaldo)}</strong>). Tetap catat pengeluaran kas ini?`,
+      confirmText: "Tetap Catat",
+      cancelText: "Batal",
+      type: "warning",
+      icon: "ri-error-warning-line"
+    });
+    if (!proceed) return;
+  }
+
+  store.recordWithdrawal({
+    amount,
+    source,
+    category,
+    notes,
+    date
+  });
+
+  document.getElementById('withdrawalModal').classList.remove('active');
+  renderReportsTab();
+  showToast(`Penarikan kas ${formatRp(amount)} (${category}) berhasil dicatat!`, "success");
 }
 
 // ==========================================
@@ -1207,23 +1609,81 @@ function setupEventListeners() {
     }
   });
 
+  // Metode Pembayaran Kasir (Tunai vs QRIS)
+  const payMethodCash = document.getElementById('payMethodCash');
+  const payMethodQris = document.getElementById('payMethodQris');
+  const paymentCashBox = document.getElementById('paymentCashBox');
+  const qrisNoticeBox = document.getElementById('qrisNoticeBox');
+
+  if (payMethodCash && payMethodQris) {
+    payMethodCash.addEventListener('click', () => {
+      activePaymentMethod = 'cash';
+      payMethodCash.classList.add('active');
+      payMethodQris.classList.remove('active');
+      if (paymentCashBox) paymentCashBox.style.display = 'block';
+      if (qrisNoticeBox) qrisNoticeBox.style.display = 'none';
+      calculateChange();
+    });
+
+    payMethodQris.addEventListener('click', () => {
+      activePaymentMethod = 'qris';
+      payMethodQris.classList.add('active');
+      payMethodCash.classList.remove('active');
+      if (paymentCashBox) paymentCashBox.style.display = 'none';
+      if (qrisNoticeBox) qrisNoticeBox.style.display = 'block';
+      calculateChange();
+    });
+  }
+
   // Input Uang Bayar Kasir dengan Pemisah Ribuan (Titik) Otomatis
   const inputCashEl = document.getElementById('inputCashPaid');
-  inputCashEl.addEventListener('input', (e) => {
-    const raw = e.target.value.replace(/[^0-9]/g, '');
-    if (raw) {
-      const num = parseInt(raw, 10);
-      e.target.value = num.toLocaleString('id-ID');
-    } else {
-      e.target.value = '';
-    }
-    calculateChange();
-  });
+  if (inputCashEl) {
+    inputCashEl.addEventListener('input', (e) => {
+      const raw = e.target.value.replace(/[^0-9]/g, '');
+      if (raw) {
+        const num = parseInt(raw, 10);
+        e.target.value = num.toLocaleString('id-ID');
+      } else {
+        e.target.value = '';
+      }
+      calculateChange();
+    });
+  }
 
-  // Input Harga Jual Produk Admin dengan Pemisah Ribuan (Titik) Otomatis
+  // Input Harga Modal Produk Admin dengan Pemisah Ribuan (Titik) & Margin Realtime
+  const formCostPriceEl = document.getElementById('formProductCostPrice');
+  if (formCostPriceEl) {
+    formCostPriceEl.addEventListener('input', (e) => {
+      const raw = e.target.value.replace(/[^0-9]/g, '');
+      if (raw) {
+        const num = parseInt(raw, 10);
+        e.target.value = num.toLocaleString('id-ID');
+      } else {
+        e.target.value = '';
+      }
+      updateProductMarginPreview();
+    });
+  }
+
+  // Input Harga Jual Produk Admin dengan Pemisah Ribuan (Titik) & Margin Realtime
   const formPriceEl = document.getElementById('formProductPrice');
   if (formPriceEl) {
     formPriceEl.addEventListener('input', (e) => {
+      const raw = e.target.value.replace(/[^0-9]/g, '');
+      if (raw) {
+        const num = parseInt(raw, 10);
+        e.target.value = num.toLocaleString('id-ID');
+      } else {
+        e.target.value = '';
+      }
+      updateProductMarginPreview();
+    });
+  }
+
+  // Input Nominal Tarik Uang dengan Pemisah Ribuan (Titik)
+  const formWithdrawalAmountEl = document.getElementById('formWithdrawalAmount');
+  if (formWithdrawalAmountEl) {
+    formWithdrawalAmountEl.addEventListener('input', (e) => {
       const raw = e.target.value.replace(/[^0-9]/g, '');
       if (raw) {
         const num = parseInt(raw, 10);
@@ -1354,12 +1814,14 @@ function setupEventListeners() {
     const id = document.getElementById('formProductId').value || ('prod_' + Date.now());
     const name = document.getElementById('formProductName').value.trim();
     const category = document.getElementById('formProductCategory').value;
+    const rawCost = document.getElementById('formProductCostPrice').value.replace(/[^0-9]/g, '');
+    const costPrice = Number(rawCost || 0);
     const rawPrice = document.getElementById('formProductPrice').value.replace(/[^0-9]/g, '');
     const price = Number(rawPrice || 0);
     const stock = Number(document.getElementById('formProductStock').value);
     const imageUrl = document.getElementById('formProductImageUrl').value.trim();
 
-        const fallbackIcons = {
+    const fallbackIcons = {
       Makanan: '<i class="ri-restaurant-2-line"></i>',
       Minuman: '<i class="ri-cup-line"></i>',
       Snack: '<i class="ri-cake-3-line"></i>',
@@ -1369,13 +1831,14 @@ function setupEventListeners() {
     const isEdit = document.getElementById('formProductId').value !== '';
 
     if (isEdit) {
-      store.updateProduct(id, { name, category, price, stock, imageUrl });
+      store.updateProduct(id, { name, category, costPrice, price, stock, imageUrl });
       showToast("Data barang berhasil diperbarui!", "success");
     } else {
       store.addProduct({
         id,
         name,
         category,
+        costPrice,
         price,
         stock,
         imageUrl,
@@ -1388,6 +1851,30 @@ function setupEventListeners() {
     renderAdminProductsTable();
     renderCashierCatalog();
   });
+
+  // Tombol Modal Penjualan Manual (Warung Tutup)
+  document.getElementById('btnOpenManualSaleModal')?.addEventListener('click', openManualSaleModal);
+  document.getElementById('btnReportManualSale')?.addEventListener('click', openManualSaleModal);
+  document.getElementById('btnCloseManualSaleModal')?.addEventListener('click', () => {
+    document.getElementById('manualSaleModal')?.classList.remove('active');
+  });
+  document.getElementById('btnCancelManualSaleModal')?.addEventListener('click', () => {
+    document.getElementById('manualSaleModal')?.classList.remove('active');
+  });
+  document.getElementById('btnManualAddProductToList')?.addEventListener('click', addProductToManualSale);
+  document.getElementById('btnSaveManualSale')?.addEventListener('click', saveManualSale);
+
+  // Tombol Modal Tarik Uang / Kas Keluar
+  document.getElementById('btnOpenWithdrawalModal')?.addEventListener('click', openWithdrawalModal);
+  document.getElementById('btnReportWithdrawal')?.addEventListener('click', openWithdrawalModal);
+  document.getElementById('btnAddNewWithdrawal')?.addEventListener('click', openWithdrawalModal);
+  document.getElementById('btnCloseWithdrawalModal')?.addEventListener('click', () => {
+    document.getElementById('withdrawalModal')?.classList.remove('active');
+  });
+  document.getElementById('btnCancelWithdrawalModal')?.addEventListener('click', () => {
+    document.getElementById('withdrawalModal')?.classList.remove('active');
+  });
+  document.getElementById('withdrawalForm')?.addEventListener('submit', handleWithdrawalSubmit);
 
   // Restock Modal Buttons
   document.getElementById('btnCloseRestockModal').addEventListener('click', () => {
@@ -1422,7 +1909,7 @@ function setupEventListeners() {
     setTimeout(exportProductsToExcel, 600);
   });
   
-  document.getElementById('btnShareReportWhatsApp').addEventListener('click', () => {
+  document.getElementById('btnShareReportWhatsApp')?.addEventListener('click', () => {
     const totalRev = store.sales.reduce((sum, s) => sum + s.totalAmount, 0);
     const totalTrx = store.sales.length;
     let msg = `*REKAP PENJUALAN ALKAMART*%0A`;
@@ -1517,4 +2004,51 @@ function setupEventListeners() {
       showToast("Data berhasil direset ke kondisi awal!", "info");
     }
   });
+
+  // Custom Select Dropdown Logic is moved to its own block below
 }
+
+// Global function to update custom select UI
+window.updateCustomSelectUI = function(val) {
+  const triggerSpan = document.querySelector('.custom-select-value');
+  if (!triggerSpan) return;
+  const options = {
+    Makanan: '<i class="ri-restaurant-2-line"></i> Makanan',
+    Minuman: '<i class="ri-cup-line"></i> Minuman',
+    Snack: '<i class="ri-cake-3-line"></i> Snack',
+    Lainnya: '<i class="ri-archive-line"></i> Lainnya'
+  };
+  triggerSpan.innerHTML = options[val] || options['Makanan'];
+};
+
+// Initialize Custom Select robustly
+document.addEventListener('DOMContentLoaded', () => {
+  const categorySelectWrapper = document.querySelector('.custom-select-wrapper');
+  const categorySelectTrigger = document.getElementById('categorySelectTrigger');
+  const categorySelectOptions = document.getElementById('categorySelectOptions');
+  const hiddenCategoryInput = document.getElementById('formProductCategory');
+
+  if (categorySelectTrigger && categorySelectOptions) {
+    categorySelectTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      categorySelectWrapper.classList.toggle('open');
+    });
+
+    categorySelectOptions.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (li) {
+        const val = li.getAttribute('data-value');
+        hiddenCategoryInput.value = val;
+        updateCustomSelectUI(val);
+        categorySelectWrapper.classList.remove('open');
+      }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (categorySelectWrapper && !categorySelectWrapper.contains(e.target)) {
+        categorySelectWrapper.classList.remove('open');
+      }
+    });
+  }
+});

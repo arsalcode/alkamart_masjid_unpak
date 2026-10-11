@@ -5,12 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Alkamart - Sistem Kasir & Manajemen Warung</title>
   <meta name="description" content="Aplikasi kasir modern Alkamart untuk warung dan toko kelontong. Ringan, cepat, responsif, dan gratis.">
-  <!-- Google Fonts: Poppins -->
+  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=4.4">
+  <link rel="stylesheet" href="css/style.css?v=5.0">
   <link rel="stylesheet" href="css/print.css?v=4.4" media="print">
   <!-- Modern Vector Icons (Remix Icon & Font Awesome) -->
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.2.0/fonts/remixicon.css" rel="stylesheet">
@@ -108,7 +108,29 @@
             </div>
           </div>
 
-          <div class="payment-quick-box">
+          <!-- Metode Pembayaran: Tunai vs QRIS -->
+          <div class="payment-method-selector">
+            <label class="section-micro-label">Metode Pembayaran:</label>
+            <div class="payment-toggle-group">
+              <button type="button" class="btn-pay-method active" id="payMethodCash" data-method="cash">
+                <i class="ri-money-dollar-circle-line"></i> <span>Tunai (Cash)</span>
+              </button>
+              <button type="button" class="btn-pay-method" id="payMethodQris" data-method="qris">
+                <i class="ri-qr-code-line"></i> <span>QRIS</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Box Info QRIS (Ditampilkan saat metode QRIS aktif) -->
+          <div class="qris-notice-box" id="qrisNoticeBox" style="display: none;">
+            <div class="qris-notice-header">
+              <i class="ri-qr-code-fill"></i>
+              <strong>Pembayaran via QRIS</strong>
+            </div>
+            <p>Silakan pembeli scan QRIS toko. Transaksi akan langsung tercatat ke Saldo QRIS.</p>
+          </div>
+
+          <div class="payment-quick-box" id="paymentCashBox">
             <label>Nominal Pembayaran (Tunai):</label>
             <div class="input-money-wrapper">
               <span class="currency-prefix">Rp</span>
@@ -156,9 +178,17 @@
           <i class="ri-bar-chart-grouped-line"></i>
           <span class="tab-label">Rekap Pendapatan</span>
         </button>
+        <button class="admin-tab-btn" data-tab="tabTransactions" title="Riwayat Transaksi">
+          <i class="ri-history-line"></i>
+          <span class="tab-label">Riwayat Transaksi</span>
+        </button>
+        <button class="admin-tab-btn" data-tab="tabWithdrawals" title="Tarik Uang">
+          <i class="ri-hand-coin-line"></i>
+          <span class="tab-label">Tarik Uang</span>
+        </button>
         <button class="admin-tab-btn" data-tab="tabSettings" title="Pengaturan & Cloud">
           <i class="ri-settings-3-line"></i>
-          <span class="tab-label">JANGAN DI MAININ</span>
+          <span class="tab-label">Pengaturan</span>
         </button>
       </div>
 
@@ -177,19 +207,16 @@
           </div>
 
           <div class="admin-controls-wrapper">
-            <div class="action-buttons-group">
-              <!-- <button class="btn btn-excel" id="btnExportProductsExcel" title="Unduh Stok Barang ke Excel/CSV">
-                <i class="ri-file-excel-2-fill"></i> <span>Unduh Stok (Excel)</span>
-              </button> -->
-              <button class="btn btn-primary" id="btnOpenAddProductModal">
-                <i class="ri-add-circle-line"></i> <span>Tambah Barang Baru</span>
-              </button>
-            </div>
-
             <div class="search-input-wrapper admin-search-wrapper" id="adminSearchWrapper">
               <span class="search-icon"><i class="ri-search-line"></i></span>
               <input type="text" id="adminProductSearch" placeholder="Cari barang admin..." autocomplete="off">
               <button class="clear-search-btn" id="adminClearSearch">&times;</button>
+            </div>
+
+            <div class="action-buttons-group">
+              <button class="btn btn-primary" id="btnOpenAddProductModal">
+                <i class="ri-add-circle-line"></i> <span>Tambah Barang</span>
+              </button>
             </div>
           </div>
         </div>
@@ -201,7 +228,9 @@
                 <th>Foto</th>
                 <th>Nama Produk</th>
                 <th>Kategori</th>
+                <th>Harga Modal</th>
                 <th>Harga Jual</th>
+                <th>Laba / Pcs</th>
                 <th>Sisa Stok</th>
                 <th>Status</th>
                 <th>Aksi</th>
@@ -217,7 +246,7 @@
       <!-- Tab Content 2: Restok Barang Menipis -->
       <div class="admin-tab-content" id="tabRestock">
         <div class="alert-info-box">
-          <span class="info-icon">💡</span>
+          <span class="info-icon"><i class="ri-error-warning-line"></i></span>
           <div>
             <strong>Pemberitahuan Restok:</strong>
             Daftar di bawah menampilkan barang yang stoknya tersisa <strong>5 item atau kurang</strong>. Segera lakukan penambahan stok agar kasir tetap bisa berjualan.
@@ -232,39 +261,61 @@
       <!-- Tab Content 3: Rekap Pendapatan & Omzet -->
       <div class="admin-tab-content" id="tabReports">
         <div class="reports-overview-cards">
+          <!-- Card 1: Total Saldo Kas Warung -->
           <div class="report-card green">
-            <span class="report-icon"><i class="ri-money-dollar-circle-line"></i></span>
+            <span class="report-icon"><i class="ri-wallet-3-line"></i></span>
             <div class="report-info">
-              <span class="report-label">Total Omzet Penjualan</span>
-              <h3 class="report-amount" id="reportTotalRevenue">Rp 0</h3>
+              <span class="report-label">Total Saldo Kas Warung</span>
+              <h3 class="report-amount" id="reportTotalSaldo">Rp 0</h3>
+              <div class="saldo-breakdown-tags">
+                <span class="tag-cash"><i class="ri-money-dollar-circle-fill"></i> Tunai: <strong id="reportSaldoCash">Rp 0</strong></span>
+                <span class="tag-qris"><i class="ri-qr-code-fill"></i> QRIS: <strong id="reportSaldoQris">Rp 0</strong></span>
+              </div>
             </div>
           </div>
 
-          <div class="report-card blue">
-            <span class="report-icon"><i class="ri-receipt-line"></i></span>
+          <!-- Card 2: Pendapatan Kotor Minggu Ini -->
+          <div class="report-card green">
+            <span class="report-icon"><i class="ri-calendar-check-line"></i></span>
             <div class="report-info">
-              <span class="report-label">Total Transaksi</span>
-              <h3 class="report-amount" id="reportTotalTransactions">0</h3>
+              <span class="report-label">Omzet Kotor Minggu Ini</span>
+              <h3 class="report-amount" id="reportWeeklyGross">Rp 0</h3>
+              <span class="report-sublabel" id="reportWeeklyCount">0 transaksi (7 hari terakhir)</span>
             </div>
           </div>
 
-          <div class="report-card orange">
-            <span class="report-icon"><i class="ri-line-chart-line"></i></span>
+          <!-- Card 3: Pendapatan Bersih Minggu Ini -->
+          <div class="report-card green">
+            <span class="report-icon"><i class="ri-funds-line"></i></span>
             <div class="report-info">
-              <span class="report-label">Rata-rata Transaksi</span>
-              <h3 class="report-amount" id="reportAvgTransaction">Rp 0</h3>
+              <span class="report-label">Laba Bersih Minggu Ini</span>
+              <h3 class="report-amount" id="reportWeeklyNet">Rp 0</h3>
+              <span class="report-sublabel">Setelah dipotong modal HPP</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Total Tarik Uang / Pengeluaran -->
+          <div class="report-card green">
+            <span class="report-icon"><i class="ri-hand-coin-line"></i></span>
+            <div class="report-info">
+              <span class="report-label">Total Uang Ditarik</span>
+              <h3 class="report-amount" id="reportTotalWithdrawn">Rp 0</h3>
+              <span class="report-sublabel" id="reportWithdrawnCount">0 kali penarikan kas</span>
             </div>
           </div>
         </div>
+      </div>
 
+      <!-- Tab Content 3b: Riwayat Transaksi Penjualan -->
+      <div class="admin-tab-content" id="tabTransactions">
         <div class="reports-action-row">
-          <h3>Riwayat Transaksi Kasir</h3>
+          <div class="reports-title-group">
+            <h3>Riwayat Transaksi Penjualan</h3>
+            <span class="text-muted" style="font-size: 13px;">Semua transaksi kasir & penjualan manual warung</span>
+          </div>
           <div class="reports-btn-group">
-            <button class="btn btn-excel" id="btnExportSalesExcel" title="Unduh Laporan Penjualan ke Excel/CSV">
-              <i class="ri-file-excel-2-fill"></i> <span>Unduh Laporan (Excel)</span>
-            </button>
-            <button class="btn btn-whatsapp" id="btnShareReportWhatsApp">
-              <i class="ri-whatsapp-line"></i> <span>Kirim Rekap ke WhatsApp</span>
+            <button class="btn btn-primary btn-sm" id="btnReportManualSale">
+              <i class="ri-add-circle-line"></i> <span>+ Penjualan Manual</span>
             </button>
           </div>
         </div>
@@ -276,6 +327,7 @@
                 <th>No. Transaksi</th>
                 <th>Waktu & Tanggal</th>
                 <th>Kasir</th>
+                <th>Metode</th>
                 <th>Rincian Belanja</th>
                 <th>Total Bayar</th>
                 <th>Aksi</th>
@@ -288,18 +340,50 @@
         </div>
       </div>
 
+      <!-- Tab Content 3c: Laporan Tarik Uang / Pengeluaran Kas -->
+      <div class="admin-tab-content" id="tabWithdrawals">
+        <!-- ================= LAPORAN PENARIKAN UANG / KAS KELUAR ================= -->
+        <div class="reports-action-row">  
+          <div class="reports-title-group">
+            <h3>Laporan Tarik Uang / Pengeluaran Kas</h3>
+            <!-- <span class="text-muted" style="font-size: 13px;">Catatan riwayat penggunaan kas (kulakan, gaji, prive pemilik, operasional, dll.)</span> -->
+          </div>
+          <div class="reports-btn-group">
+            <button class="btn btn-primary btn-sm" id="btnAddNewWithdrawal">
+              <i class="ri-hand-coin-line"></i> <span>+ Catat Tarik Uang</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="custom-table" id="withdrawalsHistoryTable">
+            <thead>
+              <tr>
+                <th>Tanggal & Waktu</th>
+                <th>Nominal Ditarik</th>
+                <th>Sumber Kas</th>
+                <th>Kategori Keperluan</th>
+                <th>Keterangan / Penggunaan</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="withdrawalsHistoryTableBody">
+              <!-- Render via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Tab Content 4: Pengaturan & Google Sheets -->
       <div class="admin-tab-content" id="tabSettings">
         <div class="settings-card">
-          <h3>📊 Hubungkan ke Google Sheets (Bebas Limit & 100% Gratis)</h3>
+          <h3>📊 Hubungkan ke Google Sheets</h3>
           <!-- <p class="settings-desc">
             Hubungkan web Alkamart langsung ke Google Spreadsheet milik Anda. Anda bisa memantau penjualan dari aplikasi Google Sheets di HP kapan saja tanpa pusing limit kuota Firebase.
           </p> -->
 
           <div class="form-group">
-            <label for="inputGoogleAppsScriptUrl">Web App URL Google Sheets:</label>
-            <input type="url" id="inputGoogleAppsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="form-input">
-            <small class="form-hint">Masukkan Web App URL dari deployment Apps Script spreadsheet Anda.</small>
+            <input type="url" id="inputGoogleAppsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" class="form-input" value="https://script.google.com/macros/s/AKfycbxm0XvmvA0MARv1Ev-1FycEwIfYnu9FmwRQm4-IkQuI3aIpldGxFzxdGWKWwV9LFbY/exec">
           </div>
 
           <div class="settings-actions">
@@ -309,16 +393,7 @@
           </div>
         </div>
 
-        <div class="settings-card">
-          <h3>💾 Cadangan Data Mandiri (Backup & Restore)</h3>
-          <p class="settings-desc">Simpan cadangan data produk dan transaksi dalam bentuk file JSON atau pulihkan data kapan saja.</p>
-          <div class="settings-actions">
-            <button class="btn btn-outline" id="btnExportDataJSON">📥 Unduh Cadangan Data (JSON)</button>
-            <button class="btn btn-outline" id="btnImportDataJSON">📤 Pulihkan dari File JSON</button>
-            <input type="file" id="fileInputImportJSON" accept=".json" style="display:none">
-            <button class="btn btn-danger-outline" id="btnResetToDefault">⚠️ Reset ke Data Bawaan Awal</button>
-          </div>
-        </div>
+       
       </div>
     </section>
 
@@ -338,6 +413,7 @@
             <div><span>Nota:</span> <strong id="recTrxId">TRX-0001</strong></div>
             <div><span>Kasir:</span> <span id="recCashierName">Kasir 1</span></div>
             <div><span>Waktu:</span> <span id="recDateTime">01/10/2026 10:00</span></div>
+            <div><span>Metode:</span> <strong id="recPaymentMethod">TUNAI (CASH)</strong></div>
           </div>
           <div class="dashed-divider"></div>
         </div>
@@ -397,12 +473,31 @@
         <div class="form-row">
           <div class="form-group">
             <label for="formProductCategory">Kategori *</label>
-                        <select id="formProductCategory" class="form-input" required>
-              <option value="Makanan">🍜 Makanan</option>
-              <option value="Minuman">🥤 Minuman</option>
-              <option value="Snack">🍪 Snack</option>
-              <option value="Lainnya">📦 Lainnya</option>
-            </select>
+            <div class="custom-select-wrapper">
+              <input type="hidden" id="formProductCategory" required>
+              <div class="custom-select-trigger" id="categorySelectTrigger">
+                <span class="custom-select-value">Pilih Kategori</span>
+                <i class="ri-arrow-down-s-line"></i>
+              </div>
+              <ul class="custom-select-options" id="categorySelectOptions">
+                <li data-value="Makanan"><i class="ri-restaurant-2-line"></i> Makanan</li>
+                <li data-value="Minuman"><i class="ri-cup-line"></i> Minuman</li>
+                <li data-value="Snack"><i class="ri-cake-3-line"></i> Snack</li>
+                <li data-value="Lainnya"><i class="ri-archive-line"></i> Lainnya</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="formProductStock">Jumlah Stok *</label>
+            <input type="number" id="formProductStock" required min="0" placeholder="Contoh: 50" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="formProductCostPrice">Harga Beli / Modal (Rp) *</label>
+            <input type="text" inputmode="numeric" id="formProductCostPrice" required placeholder="Contoh: 15.000" class="form-input">
           </div>
 
           <div class="form-group">
@@ -411,9 +506,10 @@
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="formProductStock">Jumlah Stok Awal *</label>
-          <input type="number" id="formProductStock" required min="0" placeholder="Contoh: 50" class="form-input">
+        <!-- Indikator Margin Laba Realtime -->
+        <div class="profit-margin-box" id="productMarginPreview">
+          <span class="margin-label"><i class="ri-funds-line"></i> Estimasi Laba per Pcs:</span>
+          <strong class="margin-value" id="productMarginValue">Rp 0 (0%)</strong>
         </div>
 
         <!-- Upload Foto Produk -->
@@ -505,12 +601,170 @@
     </div>
   </div>
 
+  <!-- ================= MODAL: PENJUALAN MANUAL (WARUNG TUTUP) ================= -->
+  <div class="modal-overlay" id="manualSaleModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin: 0;">📝 Catat Penjualan Manual</h3>
+          <p class="text-muted" style="margin: 2px 0 0; font-size: 12px;">Untuk transaksi saat warung tutup atau tanpa kasir</p>
+        </div>
+        <button class="btn-close-modal" id="btnCloseManualSaleModal">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding-top: 12px;">
+        <!-- Tambah Item ke Transaksi Manual -->
+        <div class="manual-sale-add-bar" style="display: flex; gap: 8px; align-items: flex-end; margin-bottom: 8px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 2; min-width: 160px; margin-bottom: 0;">
+            <label for="manualSaleProductSelect">Pilih Barang:</label>
+            <select id="manualSaleProductSelect" class="form-input">
+              <option value="">-- Pilih Barang --</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex: 1; min-width: 80px; margin-bottom: 0;">
+            <label for="manualSaleQtyInput">Jumlah:</label>
+            <input type="number" id="manualSaleQtyInput" min="1" value="1" class="form-input text-center">
+          </div>
+          <div>
+            <button type="button" class="btn btn-outline" id="btnManualAddProductToList">
+              <i class="ri-add-line"></i> Tambah
+            </button>
+          </div>
+        </div>
+
+        <!-- Tabel Daftar Item Penjualan Manual -->
+        <div class="table-responsive" style="max-height: 180px; overflow-y: auto; margin: 12px 0; border: 1px solid var(--border); border-radius: 8px;">
+          <table class="custom-table table-sm">
+            <thead>
+              <tr>
+                <th>Barang</th>
+                <th style="text-align: center;">Qty</th>
+                <th style="text-align: right;">Subtotal</th>
+                <th style="text-align: center;">✕</th>
+              </tr>
+            </thead>
+            <tbody id="manualSaleItemsTableBody">
+              <tr>
+                <td colspan="4" class="text-center text-muted" style="padding: 18px;">Belum ada barang yang dipilih.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Total Nominal Manual -->
+        <div class="summary-line total-line" style="background: var(--bg-surface); padding: 10px 14px; border-radius: 8px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 700;">TOTAL PENJUALAN:</span>
+          <strong class="total-val" id="manualSaleTotalText" style="font-size: 18px; color: var(--primary);">Rp 0</strong>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="manualSalePayMethod">Metode Pembayaran:</label>
+            <select id="manualSalePayMethod" class="form-input">
+              <option value="cash">💵 Tunai (Cash)</option>
+              <option value="qris">📱 QRIS</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="manualSaleDateTime">Waktu Transaksi:</label>
+            <input type="datetime-local" id="manualSaleDateTime" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="manualSaleNotes">Catatan / Keterangan (Opsional):</label>
+          <input type="text" id="manualSaleNotes" placeholder="Contoh: Tetangga beli saat warung tutup sore" class="form-input">
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnCancelManualSaleModal">Batal</button>
+        <button type="button" class="btn btn-primary" id="btnSaveManualSale">
+          <i class="ri-check-line"></i> Simpan Penjualan & Potong Stok
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: TARIK UANG / KAS KELUAR ================= -->
+  <div class="modal-overlay" id="withdrawalModal">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div>
+          <h3 style="margin: 0;">💸 Tarik Uang / Kas Keluar</h3>
+          <p class="text-muted" style="margin: 2px 0 0; font-size: 12px;">Catat pengeluaran kas warung agar saldo selalu akurat</p>
+        </div>
+        <button class="btn-close-modal" id="btnCloseWithdrawalModal">&times;</button>
+      </div>
+
+      <form id="withdrawalForm">
+        <div class="modal-body" style="padding-top: 12px;">
+          <!-- Saldo Saat Ini Preview -->
+          <div class="withdrawal-saldo-info" style="display: flex; gap: 12px; margin-bottom: 16px;">
+            <div class="mini-card" style="flex: 1; padding: 10px 14px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px;">
+              <span style="font-size: 11px; color: #166534; font-weight: 600; display: block;">Sisa Saldo Tunai:</span>
+              <strong style="display: block; font-size: 15px; color: #15803d; margin-top: 2px;" id="withdrawInfoSaldoCash">Rp 0</strong>
+            </div>
+            <div class="mini-card" style="flex: 1; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;">
+              <span style="font-size: 11px; color: #1e40af; font-weight: 600; display: block;">Sisa Saldo QRIS:</span>
+              <strong style="display: block; font-size: 15px; color: #2563eb; margin-top: 2px;" id="withdrawInfoSaldoQris">Rp 0</strong>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="formWithdrawalAmount">Nominal Uang Ditarik (Rp) *</label>
+            <input type="text" inputmode="numeric" id="formWithdrawalAmount" required placeholder="Contoh: 100.000" class="form-input" style="font-size: 18px; font-weight: 700;">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="formWithdrawalSource">Diambil dari Saldo *</label>
+              <select id="formWithdrawalSource" class="form-input" required>
+                <option value="cash">💵 Saldo Tunai (Cash di laci)</option>
+                <option value="qris">📱 Saldo QRIS (Rekening)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="formWithdrawalCategory">Kategori Keperluan *</label>
+              <select id="formWithdrawalCategory" class="form-input" required>
+                <option value="Kulakan / Belanja Stok">🛒 Kulakan / Belanja Stok</option>
+                <option value="Keperluan Pribadi (Prive)">👤 Keperluan Pribadi (Prive)</option>
+                <option value="Gaji Karyawan">👥 Gaji Karyawan</option>
+                <option value="Operasional Warung">⚡ Operasional (Listrik/Air/Plastik)</option>
+                <option value="Lainnya">📌 Lainnya</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="formWithdrawalNotes">Keterangan / Digunakan Untuk Apa *</label>
+            <textarea id="formWithdrawalNotes" required rows="2" placeholder="Contoh: Beli gas elpiji 2 tabung & bayar sales beras" class="form-input"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="formWithdrawalDate">Waktu Penarikan:</label>
+            <input type="datetime-local" id="formWithdrawalDate" class="form-input">
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btnCancelWithdrawalModal">Batal</button>
+          <button type="submit" class="btn btn-warning" id="btnSubmitWithdrawal">
+            <i class="ri-hand-coin-line"></i> Simpan Penarikan Kas
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toastContainer"></div>
 
   <!-- Scripts -->
-  <script src="js/data.js?v=4.3"></script>
-  <script src="js/store.js?v=4.3"></script>
-  <script src="js/app.js?v=4.3"></script>
+  <script src="js/data.js?v=5.0"></script>
+  <script src="js/store.js?v=5.0"></script>
+  <script src="js/app.js?v=5.0"></script>
 </body>
 </html>
