@@ -1497,7 +1497,7 @@ table th,
 
 .settings-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 16px;
   margin-bottom: 20px;
 }
@@ -1523,7 +1523,6 @@ table th,
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 4px;
   flex-wrap: wrap;
 }
 
@@ -1534,48 +1533,11 @@ table th,
   margin: 0;
 }
 
-.settings-desc {
-  font-size: 13px;
-  color: var(--text-muted);
-  margin: 0;
-  line-height: 1.5;
-}
-
 .settings-actions-bar {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
   margin-top: 18px;
-}
-
-.settings-guide-card {
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 12px;
-  padding: 20px 24px;
-}
-
-.settings-guide-card h4 {
-  font-size: 14px;
-  font-weight: 700;
-  color: #1E293B;
-  margin-bottom: 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings-guide-card h4 i {
-  color: var(--primary);
-  font-size: 18px;
-}
-
-.settings-guide-list {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 13px;
-  color: #475569;
-  line-height: 1.7;
 }
 
 .form-group {
