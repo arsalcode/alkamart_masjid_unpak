@@ -653,7 +653,10 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <div>
-          <h3 style="margin: 0;">📝 Catat Penjualan Manual</h3>
+          <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="ri-file-edit-line" style="color: var(--primary); font-size: 22px;"></i>
+            <span>Catat Penjualan Manual</span>
+          </h3>
           <p class="text-muted" style="margin: 2px 0 0; font-size: 12px;">Untuk transaksi saat warung tutup atau tanpa kasir</p>
         </div>
         <button class="btn-close-modal" id="btnCloseManualSaleModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
@@ -739,7 +742,10 @@
     <div class="modal-dialog">
       <div class="modal-header">
         <div>
-          <h3 style="margin: 0;">💸 Tarik Uang / Kas Keluar</h3>
+          <h3 style="margin: 0; display: flex; align-items: center; gap: 8px;">
+            <i class="ri-hand-coin-line" style="color: var(--primary); font-size: 22px;"></i>
+            <span>Tarik Uang / Kas Keluar</span>
+          </h3>
           <p class="text-muted" style="margin: 2px 0 0; font-size: 12px;">Catat pengeluaran kas warung agar saldo selalu akurat</p>
         </div>
         <button class="btn-close-modal" id="btnCloseWithdrawalModal" aria-label="Tutup"><i class="ri-close-line"></i></button>
@@ -798,7 +804,7 @@
 
         <div class="modal-footer">
           <button type="button" class="btn btn-outline" id="btnCancelWithdrawalModal">Batal</button>
-          <button type="submit" class="btn btn-warning" id="btnSubmitWithdrawal">
+          <button type="submit" class="btn btn-primary" id="btnSubmitWithdrawal" disabled>
             <i class="ri-hand-coin-line"></i> Simpan Penarikan Kas
           </button>
         </div>

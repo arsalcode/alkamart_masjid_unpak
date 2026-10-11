@@ -2674,3 +2674,29 @@ body:has(#adminView.active) #btnToggleCartMobile {
 .withdrawal-saldo-card.saldo-qris-card .saldo-card-amount {
   color: #ffffff;
 }
+
+/* ================= TOMBOL SIMPAN PENARIKAN (TRANSPARAN VS HIJAU AKTIF) ================= */
+#btnSubmitWithdrawal:disabled,
+#btnSubmitWithdrawal.btn-disabled {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  pointer-events: none;
+  transform: none !important;
+}
+
+#btnSubmitWithdrawal:not(:disabled):not(.btn-disabled) {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+  opacity: 1 !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 12px rgba(0, 107, 67, 0.28) !important;
+  transition: all 0.25s ease;
+}
+
+#btnSubmitWithdrawal:not(:disabled):not(.btn-disabled):hover {
+  background: var(--primary-dark) !important;
+  transform: translateY(-1px);
+}

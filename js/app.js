@@ -1513,6 +1513,25 @@ function selectWithdrawalSource(source) {
   }
 }
 
+function checkWithdrawalFormValidity() {
+  const amountInput = document.getElementById('formWithdrawalAmount');
+  const notesInput = document.getElementById('formWithdrawalNotes');
+  const submitBtn = document.getElementById('btnSubmitWithdrawal');
+  if (!submitBtn) return;
+
+  const amountVal = amountInput ? Number(amountInput.value.replace(/[^0-9]/g, '') || 0) : 0;
+  const notesVal = notesInput ? notesInput.value.trim() : '';
+
+  const isValid = amountVal > 0 && notesVal.length > 0;
+  if (isValid) {
+    submitBtn.removeAttribute('disabled');
+    submitBtn.classList.remove('btn-disabled');
+  } else {
+    submitBtn.setAttribute('disabled', 'true');
+    submitBtn.classList.add('btn-disabled');
+  }
+}
+
 function openWithdrawalModal() {
   const fin = store.getFinancialSummary();
 
@@ -1524,6 +1543,7 @@ function openWithdrawalModal() {
 
   document.getElementById('withdrawalForm').reset();
   selectWithdrawalSource('cash');
+  checkWithdrawalFormValidity();
 
   const dtEl = document.getElementById('formWithdrawalDate');
   if (dtEl) {
@@ -1760,7 +1780,14 @@ function setupEventListeners() {
       } else {
         e.target.value = '';
       }
+      checkWithdrawalFormValidity();
     });
+  }
+
+  // Input Keterangan Tarik Uang
+  const formWithdrawalNotesEl = document.getElementById('formWithdrawalNotes');
+  if (formWithdrawalNotesEl) {
+    formWithdrawalNotesEl.addEventListener('input', checkWithdrawalFormValidity);
   }
 
   // Tombol Cepat Nominal Berformat Ribuan (Titik)
