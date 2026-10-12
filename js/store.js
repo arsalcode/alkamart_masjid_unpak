@@ -24,17 +24,14 @@ class AlkamartStore {
   }
 
   init() {
-    // 1. Load Products (Murni 0 / Kosong agar pengguna dapat input produk asli & foto sendiri)
+    // 1. Load Products
     const savedProducts = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
-    const hasPurged = localStorage.getItem('alkamart_products_clean_zero_v1');
+    const oldDummyIds = new Set(['prod_1', 'prod_2', 'prod_3', 'prod_4', 'prod_5', 'prod_6', 'prod_7', 'prod_8', 'prod_9', 'prod_10']);
 
-    if (!hasPurged) {
-      this.products = [];
-      this.saveProducts();
-      localStorage.setItem('alkamart_products_clean_zero_v1', 'true');
-    } else if (savedProducts) {
+    if (savedProducts) {
       try {
-        this.products = JSON.parse(savedProducts);
+        const parsed = JSON.parse(savedProducts);
+        this.products = parsed.filter(p => p && !oldDummyIds.has(p.id));
       } catch (e) {
         this.products = [];
       }
@@ -433,18 +430,17 @@ class AlkamartStore {
       const data = await res.json();
 
       if (data.status === 'success') {
-        if (data.products && Array.isArray(data.products) && data.products.length > 0) {
-          // Cek apakah data dari Google Sheets hanya produk dummy bawaan (seperti prod_1 s/d prod_10)
-          const isOnlyDefaultDummy = data.products.every(p => p.id && /^prod_\d+$/.test(p.id));
-          if (isOnlyDefaultDummy && this.products.length === 0) {
-            // Jangan tarik produk dummy ke web; sinkronkan balik ke cloud agar tab Produk di spreadsheet juga bersih
-            this.syncAllToGoogleSheets().catch(e => console.warn("Auto-clear cloud products:", e));
-          } else {
-            this.products = data.products;
+        if (data.products && Array.isArray(data.products)) {
+          const oldDummyIds = new Set(['prod_1', 'prod_2', 'prod_3', 'prod_4', 'prod_5', 'prod_6', 'prod_7', 'prod_8', 'prod_9', 'prod_10']);
+          const realProducts = data.products.filter(p => p && !oldDummyIds.has(p.id));
+
+          if (realProducts.length > 0) {
+            this.products = realProducts;
+            this.saveProducts();
+          } else if (data.products.length === 0 && this.products.length > 0) {
+            this.products = [];
             this.saveProducts();
           }
-        } else if (this.products && this.products.length > 0) {
-          this.syncAllToGoogleSheets().catch(e => console.warn("Auto-populate error:", e));
         }
 
         if (data.sales && Array.isArray(data.sales)) {
