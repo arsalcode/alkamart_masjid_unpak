@@ -303,12 +303,32 @@ class AlkamartStore {
         // Fallback: Jika rincian items tidak ada (misal data ditarik dari Google Sheets)
         let estimatedHpp = 0;
         if (s.itemsSummary) {
-          this.products.forEach(p => {
-            if (p.name && s.itemsSummary.toLowerCase().includes(p.name.toLowerCase())) {
-              const prodCost = Number(p.costPrice || 0) > 0 ? Number(p.costPrice) : Math.round(Number(p.price || 0) * 0.8);
-              estimatedHpp += prodCost;
+          const parts = s.itemsSummary.split(',').map(str => str.trim());
+          for (const part of parts) {
+            const m1 = part.match(/^(.+?)\s*\((\d+)\s*x/i);
+            const m2 = part.match(/^(.+?)\s*\((\d+)\)/i);
+            let pName = '';
+            let qty = 1;
+            if (m1) {
+              pName = m1[1].trim();
+              qty = parseInt(m1[2], 10) || 1;
+            } else if (m2) {
+              pName = m2[1].trim();
+              qty = parseInt(m2[2], 10) || 1;
+            } else {
+              pName = part.replace(/\(.*?\)/g, '').trim();
             }
-          });
+
+            let unitCost = productNameMap.get(pName.toLowerCase());
+            if (!unitCost) {
+              const found = this.products.find(p => p.name && (p.name.toLowerCase() === pName.toLowerCase() || pName.toLowerCase().includes(p.name.toLowerCase())));
+              if (found) unitCost = Number(found.costPrice || 0);
+            }
+            if (!unitCost || unitCost <= 0) {
+              unitCost = Math.round((Number(s.totalAmount || 0) / Math.max(1, qty)) * 0.8);
+            }
+            estimatedHpp += unitCost * qty;
+          }
         }
         if (estimatedHpp <= 0) {
           estimatedHpp = Math.round(Number(s.totalAmount || 0) * 0.8);
