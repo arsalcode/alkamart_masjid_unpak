@@ -2220,11 +2220,11 @@ function setupEventListeners() {
   }
 
   // Backup & Restore
-  document.getElementById('btnExportDataJSON').addEventListener('click', () => store.exportBackupJSON());
+  document.getElementById('btnExportDataJSON')?.addEventListener('click', () => store.exportBackupJSON());
 
   const fileInputImport = document.getElementById('fileInputImportJSON');
-  document.getElementById('btnImportDataJSON').addEventListener('click', () => fileInputImport.click());
-  fileInputImport.addEventListener('change', (e) => {
+  document.getElementById('btnImportDataJSON')?.addEventListener('click', () => fileInputImport?.click());
+  fileInputImport?.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
@@ -2241,7 +2241,7 @@ function setupEventListeners() {
     reader.readAsText(file);
   });
 
-  document.getElementById('btnResetToDefault').addEventListener('click', async () => {
+  document.getElementById('btnResetToDefault')?.addEventListener('click', async () => {
     const confirmed = await showCustomConfirm({
       title: "Reset Seluruh Data Warung?",
       message: "Seluruh data produk dan transaksi akan dikembalikan ke kondisi awal Alkamart. <strong>Tindakan ini tidak dapat dibatalkan!</strong>",
