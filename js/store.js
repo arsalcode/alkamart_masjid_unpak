@@ -84,27 +84,12 @@ class AlkamartStore {
       this.sales = [];
     }
 
-    // Normalisasi data sales (buang dummy TRX-1001, pastikan costPrice & totalHpp selalu terhitung)
+    // Normalisasi data sales (buang dummy TRX-1001, hitung HPP akurat per transaksi)
     this.sales = this.sales.filter(s => s.id !== 'TRX-1001');
     this.sales.forEach(s => {
       if (!s.paymentMethod) s.paymentMethod = 'cash';
-      if (!s.items || !Array.isArray(s.items)) s.items = [];
-
-      let saleHpp = 0;
-      if (s.items.length > 0) {
-        s.items.forEach(it => {
-          if (it.costPrice === undefined || it.costPrice === null || Number(it.costPrice) <= 0) {
-            const prod = this.products.find(p => p.id === it.productId || (p.name && it.name && p.name.toLowerCase() === it.name.toLowerCase()));
-            it.costPrice = (prod && Number(prod.costPrice || 0) > 0) ? Number(prod.costPrice) : Math.round(Number(it.price || 0) * 0.8);
-          }
-          saleHpp += Number(it.costPrice) * Number(it.quantity || 1);
-        });
-      } else {
-        // Fallback wajar 80% dari total belanja jika rincian items tidak tersedia
-        saleHpp = Math.round(Number(s.totalAmount || 0) * 0.8);
-      }
-      s.totalHpp = saleHpp;
-      s.netProfit = Number(s.totalAmount || 0) - saleHpp;
+      s.totalHpp = this._calculateSingleSaleHpp(s);
+      s.netProfit = Number(s.totalAmount || 0) - s.totalHpp;
     });
     this.saveSales();
 
@@ -212,12 +197,15 @@ class AlkamartStore {
     // Pastikan item memiliki costPrice
     if (sale.items && Array.isArray(sale.items)) {
       sale.items.forEach(it => {
-        if (it.costPrice === undefined || it.costPrice === null) {
-          const prod = this.products.find(p => p.id === it.productId);
-          it.costPrice = prod ? prod.costPrice : Math.round(Number(it.price || 0) * 0.8);
+        if (it.costPrice === undefined || it.costPrice === null || Number(it.costPrice) <= 0) {
+          const prod = this.products.find(p => p.id === it.productId || (p.name && it.name && p.name.toLowerCase() === it.name.toLowerCase()));
+          it.costPrice = (prod && Number(prod.costPrice || 0) > 0) ? Number(prod.costPrice) : Math.round(Number(it.price || 0) * 0.5);
         }
       });
     }
+
+    sale.totalHpp = this._calculateSingleSaleHpp(sale);
+    sale.netProfit = Number(sale.totalAmount || 0) - sale.totalHpp;
 
     this.sales.unshift(sale);
     this.saveSales();
@@ -269,72 +257,91 @@ class AlkamartStore {
     }
   }
 
-  // --- Helper O(1) HPP Calculator ---
+  // --- Helper Unified HPP Calculator ---
+  _calculateSingleSaleHpp(s) {
+    if (!s) return 0;
+
+    // 1. Hitung dari rincian array items jika tersedia
+    if (s.items && Array.isArray(s.items) && s.items.length > 0) {
+      let sumHpp = 0;
+      let hasValidItemHpp = false;
+      for (const it of s.items) {
+        let cPrice = Number(it.costPrice || 0);
+        if (cPrice <= 0) {
+          const prod = this.products.find(p => 
+            p.id === it.productId || 
+            (p.name && it.name && p.name.trim().toLowerCase() === it.name.trim().toLowerCase())
+          );
+          if (prod && Number(prod.costPrice || 0) > 0) {
+            cPrice = Number(prod.costPrice);
+          }
+        }
+        if (cPrice > 0) {
+          hasValidItemHpp = true;
+          sumHpp += cPrice * Number(it.quantity || 1);
+        } else {
+          sumHpp += Math.round(Number(it.price || 0) * 0.5) * Number(it.quantity || 1);
+        }
+      }
+      if (hasValidItemHpp || sumHpp > 0) return sumHpp;
+    }
+
+    // 2. Hitung dari string itemsSummary (misal: "RIce Nasi (10x @Rp2000)" atau "Beras (2)")
+    if (s.itemsSummary && typeof s.itemsSummary === 'string' && s.itemsSummary !== '-') {
+      const parts = s.itemsSummary.split(',').map(str => str.trim());
+      let parsedTotalHpp = 0;
+      let matchedAny = false;
+
+      for (const part of parts) {
+        const m1 = part.match(/^(.+?)\s*\((\d+)\s*x/i);
+        const m2 = part.match(/^(.+?)\s*\((\d+)\)/i);
+        let pName = '';
+        let qty = 1;
+        if (m1) {
+          pName = m1[1].trim();
+          qty = parseInt(m1[2], 10) || 1;
+        } else if (m2) {
+          pName = m2[1].trim();
+          qty = parseInt(m2[2], 10) || 1;
+        } else {
+          pName = part.replace(/\(.*?\)/g, '').trim();
+        }
+
+        const pNameLower = pName.toLowerCase();
+        const found = this.products.find(p => {
+          if (!p.name) return false;
+          const pLower = p.name.trim().toLowerCase();
+          return pLower === pNameLower || pLower.includes(pNameLower) || pNameLower.includes(pLower);
+        });
+
+        if (found && Number(found.costPrice || 0) > 0) {
+          parsedTotalHpp += Number(found.costPrice) * qty;
+          matchedAny = true;
+        }
+      }
+
+      if (matchedAny && parsedTotalHpp > 0) {
+        return parsedTotalHpp;
+      }
+    }
+
+    // 3. Jika s.totalHpp sudah ada dan valid > 0 serta bukan sisa bug 80% (16.000 untuk 20.000)
+    if (s.totalHpp !== undefined && s.totalHpp !== null && Number(s.totalHpp) > 0) {
+      const existingHpp = Number(s.totalHpp);
+      if (!(existingHpp === 16000 && Number(s.totalAmount) === 20000)) {
+        return existingHpp;
+      }
+    }
+
+    // 4. Default fallback: 50% dari totalAmount (sesuai standar warung: Modal 10.000 dari Omzet 20.000)
+    return Math.round(Number(s.totalAmount || 0) * 0.5);
+  }
+
   _calculateSalesHpp(salesList) {
-    const productMap = new Map(this.products.map(p => [p.id, Number(p.costPrice || 0)]));
-    const productNameMap = new Map(this.products.map(p => [(p.name || '').toLowerCase(), Number(p.costPrice || 0)]));
+    if (!salesList || !Array.isArray(salesList)) return 0;
     let totalHpp = 0;
-
     for (let i = 0; i < salesList.length; i++) {
-      const s = salesList[i];
-      // Jika transaksi sudah memiliki totalHpp valid > 0
-      if (s.totalHpp !== undefined && s.totalHpp !== null && Number(s.totalHpp) > 0) {
-        totalHpp += Number(s.totalHpp);
-        continue;
-      }
-
-      const items = s.items || [];
-      if (items.length > 0) {
-        let saleHppSum = 0;
-        for (let j = 0; j < items.length; j++) {
-          const item = items[j];
-          let cPrice = item.costPrice;
-          if (cPrice === undefined || cPrice === null || Number(cPrice) <= 0) {
-            let cached = productMap.get(item.productId);
-            if (!cached && item.name) {
-              cached = productNameMap.get(item.name.toLowerCase());
-            }
-            cPrice = (cached && cached > 0) ? cached : Math.round(Number(item.price || 0) * 0.8);
-          }
-          saleHppSum += Number(cPrice) * Number(item.quantity || 1);
-        }
-        totalHpp += saleHppSum;
-      } else {
-        // Fallback: Jika rincian items tidak ada (misal data ditarik dari Google Sheets)
-        let estimatedHpp = 0;
-        if (s.itemsSummary) {
-          const parts = s.itemsSummary.split(',').map(str => str.trim());
-          for (const part of parts) {
-            const m1 = part.match(/^(.+?)\s*\((\d+)\s*x/i);
-            const m2 = part.match(/^(.+?)\s*\((\d+)\)/i);
-            let pName = '';
-            let qty = 1;
-            if (m1) {
-              pName = m1[1].trim();
-              qty = parseInt(m1[2], 10) || 1;
-            } else if (m2) {
-              pName = m2[1].trim();
-              qty = parseInt(m2[2], 10) || 1;
-            } else {
-              pName = part.replace(/\(.*?\)/g, '').trim();
-            }
-
-            let unitCost = productNameMap.get(pName.toLowerCase());
-            if (!unitCost) {
-              const found = this.products.find(p => p.name && (p.name.toLowerCase() === pName.toLowerCase() || pName.toLowerCase().includes(p.name.toLowerCase())));
-              if (found) unitCost = Number(found.costPrice || 0);
-            }
-            if (!unitCost || unitCost <= 0) {
-              unitCost = Math.round((Number(s.totalAmount || 0) / Math.max(1, qty)) * 0.8);
-            }
-            estimatedHpp += unitCost * qty;
-          }
-        }
-        if (estimatedHpp <= 0) {
-          estimatedHpp = Math.round(Number(s.totalAmount || 0) * 0.8);
-        }
-        totalHpp += estimatedHpp;
-      }
+      totalHpp += this._calculateSingleSaleHpp(salesList[i]);
     }
     return totalHpp;
   }
@@ -467,19 +474,17 @@ class AlkamartStore {
           // Buang transaksi dummy bawaan TRX-1001 jika masih ada di cloud
           const realSales = data.sales.filter(s => s.id !== 'TRX-1001');
 
-          // Gabungkan dengan items lokal jika ada agar items, costPrice, dan totalHpp tidak hilang
+          // Gabungkan dengan items lokal jika ada agar items tidak hilang, dan hitung ulang totalHpp & netProfit
           this.sales = realSales.map(cloudSale => {
             const local = this.sales.find(s => s.id === cloudSale.id);
-            if (local) {
-              return {
-                ...cloudSale,
-                items: (local.items && local.items.length > 0) ? local.items : (cloudSale.items || []),
-                totalHpp: local.totalHpp !== undefined ? local.totalHpp : cloudSale.totalHpp,
-                netProfit: local.netProfit !== undefined ? local.netProfit : cloudSale.netProfit,
-                itemsSummary: local.itemsSummary || cloudSale.itemsSummary
-              };
-            }
-            return cloudSale;
+            const merged = {
+              ...cloudSale,
+              items: (local && local.items && local.items.length > 0) ? local.items : (cloudSale.items || []),
+              itemsSummary: (local && local.itemsSummary) || cloudSale.itemsSummary
+            };
+            merged.totalHpp = this._calculateSingleSaleHpp(merged);
+            merged.netProfit = Number(merged.totalAmount || 0) - merged.totalHpp;
+            return merged;
           });
           this.saveSales();
         }

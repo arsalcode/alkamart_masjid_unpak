@@ -906,7 +906,7 @@ function processCheckout() {
     } else if (prod && prod.costPrice !== undefined && Number(prod.costPrice) > 0) {
       itemCost = Number(prod.costPrice);
     } else {
-      itemCost = Math.round(Number(item.price || 0) * 0.8);
+      itemCost = Math.round(Number(item.price || 0) * 0.5);
     }
 
     return {
@@ -1551,7 +1551,7 @@ function saveManualSale() {
     } else if (prod && prod.costPrice !== undefined && Number(prod.costPrice) > 0) {
       itemCost = Number(prod.costPrice);
     } else {
-      itemCost = Math.round(Number(item.price || 0) * 0.8);
+      itemCost = Math.round(Number(item.price || 0) * 0.5);
     }
 
     return {
