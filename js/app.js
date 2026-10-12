@@ -1794,8 +1794,8 @@ function setupEventListeners() {
       message: "Seluruh daftar barang yang dipilih kasir saat ini akan dibersihkan.",
       confirmText: "Ya, Kosongkan",
       cancelText: "Batal",
-      type: "warning",
-      icon: "ri-delete-bin-2-line"
+      type: "danger",
+      icon: "ri-delete-bin-line"
     });
     if (confirmed) {
       cart = [];
