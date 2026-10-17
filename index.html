@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/style.css?v=5.0">
+  <link rel="stylesheet" href="css/style.css?v=5.7">
   <link rel="stylesheet" href="css/print.css?v=5.1" media="print">
   <!-- Modern Vector Icons (Remix Icon & Font Awesome) -->
   <link href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" rel="stylesheet">
@@ -196,7 +196,8 @@
 
       <!-- Tab Content 1: Kelola Barang -->
       <div class="admin-tab-content active" id="tabProducts">
-        <div class="admin-action-bar">
+        <!-- Baris Atas: Statistik Produk & Kotak Pencarian (di Kanan) -->
+        <div class="admin-stats-bar">
           <div class="stats-mini-cards">
             <div class="mini-card">
               <span class="card-label">Total Jenis Produk</span>
@@ -206,23 +207,24 @@
               <span class="card-label">Estimasi Nilai Stok</span>
               <span class="card-number" id="adminTotalAssetValue">Rp 0</span>
             </div>
-          </div>
 
-          <div class="admin-controls-wrapper">
             <div class="search-input-wrapper admin-search-wrapper" id="adminSearchWrapper">
               <span class="search-icon"><i class="ri-search-line"></i></span>
               <input type="text" id="adminProductSearch" placeholder="Cari barang admin..." autocomplete="off">
               <button class="clear-search-btn" id="adminClearSearch" aria-label="Clear"><i class="ri-close-line"></i></button>
             </div>
+          </div>
+        </div>
 
-            <div class="action-buttons-group">
-              <button class="btn btn-outline" id="btnClearAllProducts" style="color: var(--danger); border-color: rgba(220, 38, 38, 0.4);" title="Kosongkan semua produk agar bisa input dari awal">
-                <i class="ri-delete-bin-line"></i> <span>Kosongkan Produk</span>
-              </button>
-              <button class="btn btn-primary" id="btnOpenAddProductModal">
-                <i class="ri-add-circle-line"></i> <span>Tambah Barang</span>
-              </button>
-            </div>
+        <!-- Baris Bawah: Tombol Aksi (Tepat di atas tabel) -->
+        <div class="admin-action-bar">
+          <div class="action-buttons-group">
+            <button class="btn btn-outline btn-sm" id="btnClearAllProducts" style="color: var(--danger); border-color: rgba(220, 38, 38, 0.4);" title="Kosongkan semua produk agar bisa input dari awal">
+              <i class="ri-delete-bin-line"></i> <span>Kosongkan Produk</span>
+            </button>
+            <button class="btn btn-primary btn-sm" id="btnOpenAddProductModal">
+              <i class="ri-add-circle-line"></i> <span>+ Tambah Barang</span>
+            </button>
           </div>
         </div>
 

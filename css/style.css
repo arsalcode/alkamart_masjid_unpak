@@ -1278,38 +1278,60 @@ body {
   display: block;
 }
 
-.admin-action-bar {
+.admin-stats-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
+.admin-action-bar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
 .stats-mini-cards {
   display: flex;
+  align-items: center;
   gap: 16px;
+  width: 100%;
+}
+
+.stats-mini-cards .admin-search-wrapper {
+  margin-left: auto;
 }
 
 .mini-card {
   background: var(--surface);
-  padding: 12px 20px;
+  padding: 12px 24px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .mini-card .card-label {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   display: block;
+  white-space: nowrap;
+  margin-bottom: 4px;
+  font-weight: 500;
 }
 
 .mini-card .card-number {
   font-size: 20px;
   font-weight: 700;
   color: var(--primary);
+  display: block;
+  line-height: 1.2;
 }
 
 .admin-controls-wrapper {
@@ -1321,7 +1343,17 @@ body {
 
 .action-buttons-group {
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.action-buttons-group .btn {
+  white-space: nowrap;
+}
+
+.action-buttons-group .btn span {
+  white-space: nowrap;
 }
 
 .admin-search-wrapper {
@@ -1783,12 +1815,15 @@ table th,
   padding: 24px 28px;
   position: relative;
   animation: modalFadeIn 0.2s ease-out;
-  scrollbar-width: none; /* Sembunyikan scrollbar Firefox */
-  -ms-overflow-style: none; /* Sembunyikan scrollbar IE/Edge */
+  scrollbar-width: none;
+  /* Sembunyikan scrollbar Firefox */
+  -ms-overflow-style: none;
+  /* Sembunyikan scrollbar IE/Edge */
 }
 
 .modal-dialog::-webkit-scrollbar {
-  display: none; /* Sembunyikan scrollbar Chrome, Safari, Edge */
+  display: none;
+  /* Sembunyikan scrollbar Chrome, Safari, Edge */
   width: 0;
   height: 0;
 }
@@ -2185,32 +2220,47 @@ table th,
     font-weight: 700;
   }
 
-  .admin-action-bar {
+  .admin-stats-bar {
+    display: flex;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
   }
 
-  .admin-controls-wrapper {
-    display: flex;
-    flex-direction: column;
+  .stats-mini-cards {
+    flex-wrap: wrap;
     gap: 10px;
+  }
+
+  .stats-mini-cards .admin-search-wrapper {
+    margin-left: 0;
     width: 100%;
+    grid-column: 1 / -1;
+    flex: 1 1 100%;
+  }
+
+  .admin-action-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 12px;
   }
 
   .action-buttons-group {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
     gap: 8px;
     width: 100%;
+    flex-wrap: wrap;
   }
 
   .action-buttons-group .btn {
-    padding: 10px 8px;
-    font-size: 13px;
-    justify-content: center;
+    padding: 6px 12px;
+    font-size: 12px;
     white-space: nowrap;
+    flex: 0 0 auto;
   }
 
   .admin-search-wrapper {
@@ -2311,6 +2361,12 @@ table th,
     grid-template-columns: 1fr 1fr;
     gap: 8px;
     width: 100%;
+  }
+
+  .stats-mini-cards .admin-search-wrapper {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-left: 0;
   }
 
   .mini-card {
@@ -2761,7 +2817,8 @@ body:has(#adminView.active) #btnToggleCartMobile {
   color: #94a3b8 !important;
 }
 
-select, option {
+select,
+option {
   accent-color: var(--primary);
 }
 
